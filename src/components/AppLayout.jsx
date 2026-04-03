@@ -5,8 +5,8 @@ export default function AppLayout({ crewMember, onLogout }) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar crewMember={crewMember} onLogout={onLogout} />
-      <main className="ml-64 min-h-screen">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <main className="min-h-screen md:ml-64">
+        <div className="mx-auto max-w-7xl p-4 pt-20 sm:p-6 sm:pt-24 md:p-6 md:pt-6 lg:p-8">
           <Outlet />
         </div>
       </main>

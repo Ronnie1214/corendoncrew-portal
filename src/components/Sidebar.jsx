@@ -13,20 +13,25 @@ import {
   Database,
   MessagesSquare,
   BriefcaseBusiness,
+  Menu,
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from 'react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   hasUnseenPendingLoaRequests,
   hasUnseenSeniorManagementRequests,
   isBoardAdmin,
   subscribeToStore,
 } from '@/lib/dataStore';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getRolesArray, hasRole } from '@/lib/roleUtils';
 
 export default function Sidebar({ crewMember, onLogout }) {
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [hasNewLoaRequest, setHasNewLoaRequest] = useState(false);
   const [hasNewSeniorRequest, setHasNewSeniorRequest] = useState(false);
   const isAdmin = isBoardAdmin(crewMember);
@@ -57,9 +62,101 @@ export default function Sidebar({ crewMember, onLogout }) {
     ...(isAdmin ? [{ path: '/admin/senior-management', label: 'Requests', icon: BriefcaseBusiness, hasNotification: hasNewSeniorRequest }] : []),
   ];
 
+  const renderNavLink = (item, mobile = false) => (
+    <Link
+      key={item.path}
+      to={item.path}
+      onClick={() => {
+        if (mobile) setMobileOpen(false);
+      }}
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+        location.pathname === item.path
+          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/25"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      )}
+    >
+      <item.icon className="h-4 w-4 flex-shrink-0" />
+      <span className="flex items-center gap-2">
+        <span>{item.label}</span>
+        {item.hasNotification && <span className="h-2 w-2 rounded-full bg-red-500" />}
+      </span>
+    </Link>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="fixed inset-x-0 top-0 z-50 border-b border-sidebar-border bg-sidebar/95 backdrop-blur">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#8f1016]">
+                <Plane className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate font-heading text-sm font-bold text-sidebar-primary-foreground">Corendon Airlines</h1>
+                <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">Crew Portal</p>
+              </div>
+            </div>
+
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
+                  <Menu className="h-5 w-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[88vw] max-w-sm border-sidebar-border bg-sidebar p-0 text-sidebar-foreground">
+                <div className="flex h-full flex-col">
+                  <div className="border-b border-sidebar-border p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#8f1016]">
+                        <Plane className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="truncate font-heading text-base font-bold text-sidebar-primary-foreground">Crew Portal</h2>
+                        <p className="text-xs text-sidebar-foreground/50">{crewMember?.display_name}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+                    <div className="space-y-1">
+                      <p className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40">Main</p>
+                      {navItems.map(item => renderNavLink(item, true))}
+                    </div>
+
+                    {adminItems.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40">Senior Management</p>
+                        {adminItems.map(item => renderNavLink(item, true))}
+                      </div>
+                    )}
+                  </nav>
+
+                  <div className="border-t border-sidebar-border p-3">
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        onLogout();
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/70 transition-all hover:bg-red-500/10 hover:text-red-400"
+                    >
+                      <LogOut className="h-4 w-4 flex-shrink-0" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300",
+      "fixed left-0 top-0 z-50 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 md:flex",
       collapsed ? "w-[72px]" : "w-64"
     )}>
       <div className="p-4 border-b border-sidebar-border">

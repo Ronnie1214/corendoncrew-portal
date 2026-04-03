@@ -43,22 +43,22 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <div className="bg-card rounded-3xl border border-border p-6">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20 rounded-2xl">
+        <div className="bg-card rounded-3xl border border-border p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <Avatar className="h-16 w-16 rounded-2xl sm:h-20 sm:w-20">
               <AvatarImage src={crewMember?.avatar_url || ''} alt={crewMember?.display_name} />
               <AvatarFallback className="rounded-2xl bg-primary/10 text-primary text-2xl font-heading font-bold">
                 {crewMember?.display_name?.[0] || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-heading font-bold text-foreground">
+              <h1 className="text-xl font-heading font-bold text-foreground sm:text-2xl">
                 Welcome back, {crewMember?.display_name}
               </h1>
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {crewMember?.rank || 'Crew Member'} - {format(new Date(), 'EEEE, MMMM d, yyyy')}
               </p>
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {roles.map(role => (
                   <Badge key={role} variant="outline" className={ROLE_COLORS[role] || 'bg-muted text-muted-foreground border-border'}>
                     {role}
@@ -77,7 +77,7 @@ export default function Dashboard() {
       </div>
 
       {loaNotification && (
-        <div className={`rounded-2xl border p-4 flex items-start justify-between gap-4 ${
+        <div className={`flex flex-col gap-4 rounded-2xl border p-4 sm:flex-row sm:items-start sm:justify-between ${
           loaNotification.status === 'Approved'
             ? 'border-green-500/20 bg-green-500/10'
             : 'border-red-500/20 bg-red-500/10'
@@ -94,7 +94,7 @@ export default function Dashboard() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 self-end sm:self-auto"
             onClick={async () => { await dismissLoaNotification(loaNotification.id, crewMember.id); }}
           >
             <X className="w-4 h-4" />
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-heading font-semibold">Upcoming Allocations</h2>
             <Link to="/flights" className="text-primary text-sm font-medium hover:underline">
               View all flights
@@ -116,8 +116,8 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {dashboardData.upcomingFlights.map(({ flight, allocation }) => (
-                <div key={allocation.id} className="bg-card rounded-2xl border border-border p-5">
-                  <div className="flex items-center justify-between gap-4">
+                <div key={allocation.id} className="bg-card rounded-2xl border border-border p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-heading font-bold text-primary">{flight.flight_number}</p>
                       <p className="text-sm text-muted-foreground">
@@ -175,13 +175,13 @@ export default function Dashboard() {
 
 function StatCard({ icon: Icon, label, value }) {
   return (
-    <div className="bg-card rounded-2xl border border-border p-5">
+    <div className="bg-card rounded-2xl border border-border p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Icon className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <p className="text-2xl font-heading font-bold">{value}</p>
+          <p className="text-xl font-heading font-bold sm:text-2xl">{value}</p>
           <p className="text-xs text-muted-foreground">{label}</p>
         </div>
       </div>

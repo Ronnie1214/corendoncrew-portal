@@ -129,7 +129,7 @@ export default function Flights() {
       </div>
 
       {showForm && canScheduleFlights && (
-        <form onSubmit={handleSchedule} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSchedule} className="bg-card rounded-2xl border border-border p-4 space-y-4 sm:p-6">
           <h2 className="font-heading font-semibold">Schedule a Flight</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
@@ -166,7 +166,7 @@ export default function Flights() {
               <Input value={form.arrival} onChange={(event) => setForm({ ...form, arrival: event.target.value })} required />
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={submitting} className="bg-primary">
               {submitting ? 'Scheduling...' : 'Save Flight'}
             </Button>
@@ -201,23 +201,23 @@ export default function Flights() {
                 className="border border-border rounded-2xl overflow-hidden bg-[#141414] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.03)]"
               >
                 <AccordionTrigger className="px-4 py-4 hover:no-underline">
-                  <div className="flex flex-1 items-center justify-between gap-4 pr-4">
-                    <div className="flex items-start gap-3">
+                  <div className="flex flex-1 flex-col gap-3 pr-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-orange-500/90 text-white flex items-center justify-center flex-shrink-0">
                         <Plane className="w-4 h-4" />
                       </div>
-                      <div className="text-left">
+                      <div className="min-w-0 text-left">
                         <p className="font-heading font-bold tracking-wide">{flight.flight_number}</p>
                         <p className="text-sm text-zinc-300">
                           {flight.departure} - {flight.arrival}
                         </p>
-                        <p className="text-xs text-zinc-400 mt-1">
+                        <p className="mt-1 text-xs leading-relaxed text-zinc-400">
                           {format(new Date(flight.date), 'EEE, MMM d')} at {format(new Date(flight.date), 'HH:mm')} | {flight.plane_model || 'Aircraft TBC'} | {flight.plane_registration || 'Registration TBC'} | {flightAllocations.length} allocated
                         </p>
                       </div>
                     </div>
                     {myAllocation && (
-                      <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/15">
+                      <Badge className="w-fit bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/15">
                         {myAllocation.position}
                       </Badge>
                     )}
@@ -234,7 +234,7 @@ export default function Flights() {
                       const blockedByOtherRole = Boolean(myAllocation && !isMine);
 
                       return (
-                        <div key={slot.role} className="px-4 py-4 border-b border-white/8 last:border-b-0">
+                        <div key={slot.role} className="border-b border-white/8 px-4 py-4 last:border-b-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-3">
@@ -266,7 +266,7 @@ export default function Flights() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="border-red-400/25 text-red-300 bg-transparent hover:bg-red-500/10 hover:text-red-200"
+                                    className="w-full border-red-400/25 bg-transparent text-red-300 hover:bg-red-500/10 hover:text-red-200 sm:w-auto"
                                     disabled={actionState[flight.id] === 'remove'}
                                     onClick={() => handleRemoveAllocation(myAllocation.id, flight.id)}
                                   >
@@ -276,7 +276,7 @@ export default function Flights() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="border-orange-400/20 text-orange-300 bg-transparent hover:bg-orange-500/10 hover:text-orange-200"
+                                    className="w-full border-orange-400/20 bg-transparent text-orange-300 hover:bg-orange-500/10 hover:text-orange-200 sm:w-auto"
                                     disabled={isFull || blockedByOtherRole || isBusy}
                                     onClick={() => handleAllocate(flight.id, slot.role)}
                                   >
@@ -291,11 +291,11 @@ export default function Flights() {
                     })}
 
                     {canDeleteFlights && (
-                      <div className="px-4 py-4 border-t border-white/10 flex justify-end">
+                      <div className="flex justify-stretch border-t border-white/10 px-4 py-4 sm:justify-end">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-red-300 hover:text-red-200 hover:bg-red-500/10"
+                          className="w-full text-red-300 hover:bg-red-500/10 hover:text-red-200 sm:w-auto"
                           onClick={async () => { await deleteFlight(flight.id); }}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
