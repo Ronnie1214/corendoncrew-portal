@@ -1,0 +1,54 @@
+{
+  "name": "Flight",
+  "type": "object",
+  "properties": {
+    "flight_number": {
+      "type": "string",
+      "title": "Flight Number"
+    },
+    "departure": {
+      "type": "string",
+      "title": "Departure Airport"
+    },
+    "arrival": {
+      "type": "string",
+      "title": "Arrival Airport"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Flight Date & Time"
+    },
+    "aircraft": {
+      "type": "string",
+      "title": "Aircraft Type"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Scheduled",
+        "Boarding",
+        "In Flight",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Scheduled"
+    },
+    "max_crew": {
+      "type": "number",
+      "title": "Max Crew Slots",
+      "default": 6
+    },
+    "created_by_name": {
+      "type": "string",
+      "title": "Scheduled By"
+    }
+  },
+  "required": [
+    "flight_number",
+    "departure",
+    "arrival",
+    "date"
+  ]
+}

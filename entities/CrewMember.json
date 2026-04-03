@@ -1,0 +1,70 @@
+{
+  "name": "CrewMember",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "title": "Username"
+    },
+    "password": {
+      "type": "string",
+      "title": "Password"
+    },
+    "display_name": {
+      "type": "string",
+      "title": "Display Name"
+    },
+    "roles": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Executive Board",
+          "Senior Board",
+          "Recruitment",
+          "Cabin Operations",
+          "Flight Deck",
+          "Airside Operations",
+          "Security",
+          "Flight Dispatcher"
+        ]
+      }
+    },
+    "rank": {
+      "type": "string",
+      "title": "Rank"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Active",
+        "On LOA",
+        "Suspended",
+        "Inactive"
+      ],
+      "default": "Active"
+    },
+    "avatar_url": {
+      "type": "string",
+      "title": "Avatar URL"
+    },
+    "join_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Join Date"
+    },
+    "flights_completed": {
+      "type": "number",
+      "title": "Flights Completed",
+      "default": 0
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "display_name",
+    "roles"
+  ]
+}

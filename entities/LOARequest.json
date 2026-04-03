@@ -1,0 +1,49 @@
+{
+  "name": "LOARequest",
+  "type": "object",
+  "properties": {
+    "crew_member_id": {
+      "type": "string",
+      "title": "Crew Member ID"
+    },
+    "crew_member_name": {
+      "type": "string",
+      "title": "Crew Member Name"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "title": "End Date"
+    },
+    "reason": {
+      "type": "string",
+      "title": "Reason"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Pending",
+        "Approved",
+        "Denied"
+      ],
+      "default": "Pending"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "title": "Reviewed By"
+    }
+  },
+  "required": [
+    "crew_member_id",
+    "crew_member_name",
+    "start_date",
+    "end_date",
+    "reason"
+  ]
+}

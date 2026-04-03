@@ -1,0 +1,31 @@
+{
+  "name": "FlightAllocation",
+  "type": "object",
+  "properties": {
+    "flight_id": {
+      "type": "string",
+      "title": "Flight ID"
+    },
+    "crew_member_id": {
+      "type": "string",
+      "title": "Crew Member ID"
+    },
+    "crew_member_name": {
+      "type": "string",
+      "title": "Crew Member Name"
+    },
+    "crew_member_roles": {
+      "type": "string",
+      "title": "Crew Member Roles"
+    },
+    "position": {
+      "type": "string",
+      "title": "Position"
+    }
+  },
+  "required": [
+    "flight_id",
+    "crew_member_id",
+    "crew_member_name"
+  ]
+}

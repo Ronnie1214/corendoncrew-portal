@@ -1,0 +1,13 @@
+[build]
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/data"
+  to = "/.netlify/functions/data"
+  status = 200

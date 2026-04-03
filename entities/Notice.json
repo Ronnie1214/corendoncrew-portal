@@ -1,0 +1,38 @@
+{
+  "name": "Notice",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priority",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "author_name": {
+      "type": "string",
+      "title": "Author"
+    },
+    "pinned": {
+      "type": "boolean",
+      "title": "Pinned",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}
