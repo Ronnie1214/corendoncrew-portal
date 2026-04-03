@@ -158,9 +158,10 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
                       <span>{themePreference === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
                     </button>
                     <button
-                      onClick={() => {
+                      type="button"
+                      onClick={async () => {
                         setMobileOpen(false);
-                        onLogout();
+                        await onLogout();
                       }}
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/70 transition-all hover:bg-red-500/10 hover:text-red-400"
                     >
@@ -271,7 +272,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
           )}
         </div>
         <button
-          onClick={onLogout}
+          type="button"
+          onClick={async () => { await onLogout(); }}
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 transition-all w-full mt-1",
             collapsed && "justify-center"

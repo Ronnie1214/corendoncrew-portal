@@ -35,14 +35,14 @@ export default function CrewLogin({ onLogin }) {
         className="absolute inset-0 scale-110 bg-cover bg-center bg-no-repeat blur-xl"
         style={{ backgroundImage: "url('/login-background.png')" }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,13,24,0.86),rgba(17,25,39,0.74),rgba(96,11,17,0.48))]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(255,110,92,0.2),transparent_32%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,13,24,0.88),rgba(20,24,34,0.78),rgba(88,8,14,0.54))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(143,16,22,0.26),transparent_32%)]" />
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 h-96 w-96 rounded-full bg-[#8f1016]/20 blur-3xl" />
       
       <div className="relative z-10 mx-4 w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-accent rounded-2xl mb-4 shadow-lg shadow-accent/25">
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#8f1016] shadow-lg shadow-[#8f1016]/30">
             <Plane className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-heading font-bold text-white">Corendon Airlines</h1>
@@ -92,7 +92,7 @@ export default function CrewLogin({ onLogin }) {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-accent hover:bg-accent/90 text-white font-semibold h-11 rounded-xl">
+              className="h-11 w-full rounded-xl bg-[#8f1016] font-semibold text-white hover:bg-[#7b0d13]">
               
               {loading ?
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> :

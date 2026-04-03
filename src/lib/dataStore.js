@@ -5,6 +5,7 @@ const LEGACY_DB_KEY = 'crew_portal_db_v1';
 const DATA_CHANGED_EVENT = 'crew-portal:data-changed';
 const SESSION_CHANGED_EVENT = 'crew-portal:session-changed';
 const LOA_REVIEW_RETENTION_MS = 24 * 60 * 60 * 1000;
+const THEME_STORAGE_PREFIX = 'crew-theme:';
 
 export const CREW_STATUS_OPTIONS = [
   'Exempt',
@@ -190,6 +191,9 @@ async function supabaseRpc(name, args = {}) {
 
 function saveSession(member) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(member));
+  if (member?.id && member?.preferred_theme) {
+    localStorage.setItem(`${THEME_STORAGE_PREFIX}${member.id}`, member.preferred_theme);
+  }
   emit(SESSION_CHANGED_EVENT);
 }
 
@@ -205,6 +209,16 @@ export function getSessionCrewMember() {
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
   emit(SESSION_CHANGED_EVENT);
+}
+
+export function getStoredThemePreference(crewMemberId) {
+  if (!crewMemberId) return null;
+  return localStorage.getItem(`${THEME_STORAGE_PREFIX}${crewMemberId}`);
+}
+
+export function setStoredThemePreference(crewMemberId, preferredTheme) {
+  if (!crewMemberId || !preferredTheme) return;
+  localStorage.setItem(`${THEME_STORAGE_PREFIX}${crewMemberId}`, preferredTheme);
 }
 
 export async function migrateLegacyLocalData() {
