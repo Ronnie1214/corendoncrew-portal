@@ -74,7 +74,7 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
     try {
       await updatePreferredTheme(crewMember.id, selectedTheme);
     } catch {
-      onThemeChange?.(themePreference);
+      // Keep the chosen theme applied locally even if the background save fails.
     }
   };
 
