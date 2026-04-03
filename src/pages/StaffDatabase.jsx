@@ -6,8 +6,9 @@ import { ROLE_COLORS, getRolesArray, sortByRank } from '@/lib/roleUtils';
 function getStatusClasses(status) {
   switch (status) {
     case 'Active':
-    case 'Exempt':
       return 'bg-green-500/10 text-green-600';
+    case 'Exempt':
+      return 'bg-slate-500/10 text-slate-600';
     case 'Authorise Leave':
       return 'bg-blue-500/10 text-blue-600';
     case 'Deriorating':
