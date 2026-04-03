@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Copy, Edit, Plus, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ export default function ManageCrew() {
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [copyState, setCopyState] = useState('');
   const [form, setForm] = useState(INITIAL_FORM);
 
   useEffect(() => {
@@ -69,6 +70,20 @@ export default function ManageCrew() {
     setShowForm(false);
     setEditingId(null);
     setError('');
+    setCopyState('');
+  };
+
+  const handleCopyPassword = async () => {
+    if (!form.password) return;
+
+    try {
+      await navigator.clipboard.writeText(form.password);
+      setCopyState('Copied');
+      setTimeout(() => setCopyState(''), 1500);
+    } catch {
+      setCopyState('Unable to copy');
+      setTimeout(() => setCopyState(''), 1500);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -135,7 +150,13 @@ export default function ManageCrew() {
             </div>
             <div>
               <Label className="text-sm">Password {editingId && '(leave blank to keep current password)'}</Label>
-              <Input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required={!editingId} />
+              <div className="flex gap-2">
+                <Input value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required={!editingId} />
+                <Button type="button" variant="outline" className="shrink-0" disabled={!form.password} onClick={handleCopyPassword}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  {copyState || 'Copy'}
+                </Button>
+              </div>
             </div>
             <div>
               <Label className="text-sm">Rank</Label>
