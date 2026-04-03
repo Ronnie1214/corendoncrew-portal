@@ -66,7 +66,7 @@ export default function SeniorManagement() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-4 space-y-4 sm:p-6">
           <h2 className="font-heading font-semibold">New Request</h2>
           <div>
             <Label className="text-sm">Request Type</Label>
@@ -87,12 +87,12 @@ export default function SeniorManagement() {
             <Textarea value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} rows={5} required />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" disabled={submitting} className="bg-primary">
+          <Button type="submit" disabled={submitting} className="bg-primary w-full sm:w-auto">
             {submitting ? 'Sending...' : 'Send Request'}
           </Button>
         </form>
 
-        <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="bg-card rounded-2xl border border-border p-4 sm:p-6">
           <h2 className="font-heading font-semibold mb-4">Your Requests</h2>
           {requests.length === 0 ? (
             <div className="text-center py-10">
@@ -103,7 +103,7 @@ export default function SeniorManagement() {
             <div className="space-y-3">
               {requests.map(request => (
                 <div key={request.id} className="rounded-2xl border border-border p-4">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                       {request.request_type === 'Chat' ? <MessageSquare className="w-4 h-4 text-primary" /> : <CalendarDays className="w-4 h-4 text-primary" />}
                       <p className="font-medium text-sm">{request.request_type}</p>

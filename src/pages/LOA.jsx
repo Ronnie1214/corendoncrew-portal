@@ -63,18 +63,18 @@ export default function LOA() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Leave of Absence</h1>
           <p className="text-muted-foreground text-sm mt-1">Book LOA and track any decisions from Senior Board or Executive Board.</p>
         </div>
-        <Button onClick={() => setShowForm(value => !value)} className="bg-primary">
+        <Button onClick={() => setShowForm(value => !value)} className="bg-primary w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" /> Book LOA
         </Button>
       </div>
 
       {notification && (
-        <div className={`rounded-2xl border p-4 flex items-start justify-between gap-4 ${
+        <div className={`flex flex-col gap-4 rounded-2xl border p-4 sm:flex-row sm:items-start sm:justify-between ${
           notification.status === 'Approved'
             ? 'border-green-500/20 bg-green-500/10'
             : 'border-red-500/20 bg-red-500/10'
@@ -85,14 +85,14 @@ export default function LOA() {
               Reviewed by {notification.reviewed_by || 'the board'}.
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { await dismissLoaNotification(notification.id, crewMember.id); }}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 self-end sm:self-auto" onClick={async () => { await dismissLoaNotification(notification.id, crewMember.id); }}>
             <X className="w-4 h-4" />
           </Button>
         </div>
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-4 space-y-4 sm:p-6">
           <h2 className="font-heading font-semibold">New LOA Request</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -109,7 +109,7 @@ export default function LOA() {
             <Textarea value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} placeholder="Explain your reason for leave..." required />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={submitting} className="bg-primary">
               {submitting ? 'Submitting...' : 'Submit Request'}
             </Button>
@@ -130,8 +130,8 @@ export default function LOA() {
             const Icon = config.icon;
 
             return (
-              <div key={request.id} className="bg-card rounded-2xl border border-border p-5">
-                <div className="flex items-center justify-between mb-3">
+              <div key={request.id} className="bg-card rounded-2xl border border-border p-4 sm:p-5">
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-lg ${config.bg} flex items-center justify-center`}>
                       <Icon className={`w-4 h-4 ${config.color}`} />
@@ -140,7 +140,7 @@ export default function LOA() {
                   </div>
                   <span className="text-xs text-muted-foreground">{format(new Date(request.created_date), 'MMM d, yyyy')}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+                <div className="mb-2 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                   <div>
                     <p className="text-muted-foreground text-xs">From</p>
                     <p className="font-medium">{format(new Date(request.start_date), 'MMM d, yyyy')}</p>

@@ -66,7 +66,7 @@ export default function Profile() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-heading font-bold">My Profile</h1>
 
-      <div className="rounded-2xl border border-border bg-[#131313] p-5 text-white shadow-sm">
+      <div className="rounded-2xl border border-border bg-[#131313] p-4 text-white shadow-sm sm:p-5">
         <p className="text-sm font-semibold mb-4">Profile Picture</p>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative w-fit">
@@ -81,7 +81,7 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -91,7 +91,7 @@ export default function Profile() {
               />
               <Button
                 variant="outline"
-                className="bg-transparent text-white border-zinc-600 hover:bg-zinc-800 hover:text-white"
+                className="w-full border-zinc-600 bg-transparent text-white hover:bg-zinc-800 hover:text-white sm:w-auto"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Change Picture
@@ -108,8 +108,8 @@ export default function Profile() {
           <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         </div>
 
-        <div className="px-6 pb-6 -mt-12 relative">
-          <Avatar className="w-24 h-24 rounded-2xl border-4 border-card shadow-lg">
+        <div className="relative -mt-12 px-4 pb-4 sm:px-6 sm:pb-6">
+          <Avatar className="h-20 w-20 rounded-2xl border-4 border-card shadow-lg sm:h-24 sm:w-24">
             <AvatarImage src={crewMember?.avatar_url || ''} alt={crewMember?.display_name} />
             <AvatarFallback className="rounded-2xl bg-card text-3xl font-heading font-bold text-primary">
               {crewMember?.display_name?.[0] || '?'}
@@ -118,7 +118,7 @@ export default function Profile() {
 
           <div className="mt-4">
             <div className="flex items-center gap-2 flex-wrap mb-2">
-              <h2 className="text-xl font-heading font-bold">{crewMember?.display_name}</h2>
+              <h2 className="text-lg font-heading font-bold sm:text-xl">{crewMember?.display_name}</h2>
               <span className={`text-xs font-medium px-3 py-1 rounded-full ${getStatusClasses(crewMember?.status)}`}>
                 {crewMember?.status || 'Active'}
               </span>
@@ -147,7 +147,7 @@ export default function Profile() {
 
 function DetailCard({ icon: Icon, label, value }) {
   return (
-    <div className="bg-card rounded-2xl border border-border p-5">
+    <div className="bg-card rounded-2xl border border-border p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Icon className="w-5 h-5 text-primary" />

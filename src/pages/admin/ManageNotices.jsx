@@ -60,18 +60,18 @@ export default function ManageNotices() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Manage Notices</h1>
           <p className="text-muted-foreground text-sm mt-1">Publish global notices for every crew role.</p>
         </div>
-        <Button onClick={() => { setShowForm(value => !value); if (showForm) resetForm(); }} className="bg-primary">
+        <Button onClick={() => { setShowForm(value => !value); if (showForm) resetForm(); }} className="bg-primary w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" /> New Notice
         </Button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-4 space-y-4 sm:p-6">
           <h2 className="font-heading font-semibold">{editingId ? 'Edit Notice' : 'New Notice'}</h2>
           <div>
             <Label className="text-sm">Title</Label>
@@ -81,7 +81,7 @@ export default function ManageNotices() {
             <Label className="text-sm">Description</Label>
             <Textarea value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} rows={4} required />
           </div>
-          <div className="flex items-end gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
               <Label className="text-sm">Importance</Label>
               <Select value={form.priority} onValueChange={(value) => setForm({ ...form, priority: value })}>
@@ -99,7 +99,7 @@ export default function ManageNotices() {
               <Label className="text-sm">Pin notice</Label>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={submitting} className="bg-primary">
               {submitting ? 'Saving...' : editingId ? 'Update Notice' : 'Publish Notice'}
             </Button>
@@ -116,8 +116,8 @@ export default function ManageNotices() {
       ) : (
         <div className="space-y-3">
           {notices.map(notice => (
-            <div key={notice.id} className="bg-card rounded-2xl border border-border p-5">
-              <div className="flex items-start justify-between gap-4">
+            <div key={notice.id} className="bg-card rounded-2xl border border-border p-4 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-sm">{notice.title}</h3>
@@ -129,7 +129,7 @@ export default function ManageNotices() {
                     {notice.author_name} - {format(new Date(notice.created_date), 'MMM d, yyyy')}
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 self-end sm:self-auto">
                   <Button
                     variant="ghost"
                     size="icon"

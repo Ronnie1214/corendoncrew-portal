@@ -137,18 +137,18 @@ export default function ManageCrew() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Manage Crew</h1>
           <p className="text-muted-foreground text-sm mt-1">{members.length} crew members</p>
         </div>
-        <Button onClick={() => { setShowForm(value => !value); if (showForm) resetForm(); }} className="bg-primary">
+        <Button onClick={() => { setShowForm(value => !value); if (showForm) resetForm(); }} className="bg-primary w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" /> Add Member
         </Button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-6 space-y-4 max-w-3xl">
+        <form onSubmit={handleSubmit} className="max-w-3xl space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6">
           <h2 className="font-heading font-semibold">{editingId ? 'Edit Member' : 'Add Crew Member'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -206,7 +206,7 @@ export default function ManageCrew() {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={submitting || form.roles.length === 0} className="bg-primary">
               {submitting ? 'Saving...' : editingId ? 'Update Member' : 'Add Member'}
             </Button>
@@ -221,7 +221,7 @@ export default function ManageCrew() {
 
           return (
             <div key={member.id} className="bg-card rounded-2xl border border-border p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {member.avatar_url ? (
                     <img src={member.avatar_url} alt={member.display_name} className="w-full h-full object-cover" />
@@ -234,7 +234,7 @@ export default function ManageCrew() {
                   <p className="text-xs text-muted-foreground">@{member.username}</p>
                   {member.rank && <p className="text-xs text-muted-foreground">{member.rank}</p>}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex flex-shrink-0 gap-1">
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(member)}>
                     <Edit className="w-3.5 h-3.5" />
                   </Button>
@@ -245,13 +245,13 @@ export default function ManageCrew() {
                   )}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-1 mt-3">
+              <div className="mt-3 flex flex-wrap gap-1">
                 {roles.map(role => (
                   <span key={role} className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${ROLE_COLORS[role] || 'bg-muted text-muted-foreground border-border'}`}>
                     {role}
                   </span>
                 ))}
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ml-auto ${getStatusClasses(member.status)}`}>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${roles.length > 0 ? 'sm:ml-auto' : ''} ${getStatusClasses(member.status)}`}>
                   {member.status || 'Active'}
                 </span>
               </div>
