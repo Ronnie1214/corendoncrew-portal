@@ -324,6 +324,17 @@ export function subscribeToStore(callback) {
   };
 }
 
+export function subscribeToSession(callback) {
+  const handler = () => callback();
+  window.addEventListener(SESSION_CHANGED_EVENT, handler);
+  window.addEventListener('storage', handler);
+
+  return () => {
+    window.removeEventListener(SESSION_CHANGED_EVENT, handler);
+    window.removeEventListener('storage', handler);
+  };
+}
+
 export async function authenticateCrewMember(username, password) {
   if (hasSupabaseEnv) {
     const data = await supabaseRpc('authenticate_crew_member', {

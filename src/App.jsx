@@ -25,7 +25,7 @@ import {
   migrateLegacyLocalData,
   refreshSession,
   setStoredThemePreference,
-  subscribeToStore,
+  subscribeToSession,
 } from '@/lib/dataStore';
 import { hasRole } from '@/lib/roleUtils';
 
@@ -86,7 +86,7 @@ const AuthenticatedApp = () => {
 
     loadSession();
 
-    return subscribeToStore(() => {
+    return subscribeToSession(() => {
       loadSession();
     });
   }, []);
