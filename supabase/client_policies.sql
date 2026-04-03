@@ -30,6 +30,14 @@ to anon, authenticated
 using (true)
 with check (true);
 
+drop policy if exists "department_rosters_write_all" on public.department_roster_assignments;
+create policy "department_rosters_write_all"
+on public.department_roster_assignments
+for all
+to anon, authenticated
+using (true)
+with check (true);
+
 drop policy if exists "loa_requests_write_all" on public.loa_requests;
 create policy "loa_requests_write_all"
 on public.loa_requests

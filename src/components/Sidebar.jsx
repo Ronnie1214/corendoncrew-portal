@@ -28,7 +28,7 @@ import {
   updatePreferredTheme,
 } from '@/lib/dataStore';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getRolesArray, hasRole } from '@/lib/roleUtils';
+import { getRolesArray, hasAnyRole, hasRole } from '@/lib/roleUtils';
 
 export default function Sidebar({ crewMember, onLogout, themePreference, onThemeChange }) {
   const location = useLocation();
@@ -39,6 +39,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
   const [hasNewSeniorRequest, setHasNewSeniorRequest] = useState(false);
   const isAdmin = isBoardAdmin(crewMember);
   const isExecutive = hasRole(crewMember, 'Executive Board');
+  const canViewAirsideRosters = hasAnyRole(crewMember, 'Airside Operations', 'Flight Dispatcher');
+  const canViewSecurityRosters = hasAnyRole(crewMember, 'Security', 'Flight Dispatcher');
 
   useEffect(() => {
     const sync = async () => {
@@ -63,6 +65,11 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
     ...(isExecutive ? [{ path: '/admin/crew', label: 'Manage Crew', icon: Shield }] : []),
     ...(isAdmin ? [{ path: '/admin/loa', label: 'LOA Requests', icon: CalendarOff, hasNotification: hasNewLoaRequest }] : []),
     ...(isAdmin ? [{ path: '/admin/senior-management', label: 'Requests', icon: BriefcaseBusiness, hasNotification: hasNewSeniorRequest }] : []),
+  ];
+
+  const departmentItems = [
+    ...(canViewAirsideRosters ? [{ path: '/department-rosters/airside-operations', label: 'Airside Operations', icon: BriefcaseBusiness }] : []),
+    ...(canViewSecurityRosters ? [{ path: '/department-rosters/security', label: 'Security', icon: Shield }] : []),
   ];
 
   const nextTheme = themePreference === 'dark' ? 'light' : 'dark';
@@ -140,6 +147,13 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
                       <p className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40">Main</p>
                       {navItems.map(item => renderNavLink(item, true))}
                     </div>
+
+                    {departmentItems.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40">Department Rosters</p>
+                        {departmentItems.map(item => renderNavLink(item, true))}
+                      </div>
+                    )}
 
                     {adminItems.length > 0 && (
                       <div className="space-y-1">
@@ -221,6 +235,27 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
             {!collapsed && <span>{item.label}</span>}
           </Link>
         ))}
+
+        {departmentItems.length > 0 && (
+          <>
+            {!collapsed && <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest px-3 mt-6 mb-2">Department Rosters</p>}
+            {departmentItems.map(item => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
+                  location.pathname === item.path
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/25"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            ))}
+          </>
+        )}
 
         {adminItems.length > 0 && (
           <>

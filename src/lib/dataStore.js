@@ -30,6 +30,24 @@ export const FLIGHT_ROLE_SLOTS = [
   { role: 'Security Officer', capacity: 4 },
 ];
 
+export const AIRSIDE_DEPARTMENT_ROLES = [
+  'GPU',
+  'FWD Stairs',
+  'AFT Stairs',
+  'FWD Baggage Loader',
+  'AFT Baggage Loader',
+  'Baggage Runner',
+  'Fuel',
+  'Catering',
+  'Cones & PGT',
+];
+
+export const SECURITY_DEPARTMENT_ROLES = [
+  'Scanners',
+  'Airport Patrol',
+  'Police Car Patrol',
+];
+
 function emit(name) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(name));
@@ -172,6 +190,21 @@ function mapSeniorManagementRequest(request) {
     admin_seen: Boolean(request.admin_seen),
     created_date: request.created_at || request.created_date || null,
     updated_date: request.updated_at || request.updated_date || null,
+  };
+}
+
+function mapDepartmentRosterAssignment(assignment) {
+  if (!assignment) return null;
+  return {
+    id: assignment.id,
+    flight_id: assignment.flight_id,
+    department: assignment.department,
+    assignment_role: assignment.assignment_role,
+    assigned_crew_member_id: assignment.assigned_crew_member_id,
+    assigned_crew_member_name: assignment.assigned_member?.display_name || assignment.assigned_crew_member_name || '',
+    assigned_by_member_id: assignment.assigned_by_member_id || null,
+    created_date: assignment.created_at || assignment.created_date || null,
+    updated_date: assignment.updated_at || assignment.updated_date || null,
   };
 }
 
@@ -876,6 +909,69 @@ export async function listSeniorManagementRequests(options = {}) {
 
   const { requests } = await apiRequest('listSeniorManagementRequests', { options });
   return requests || [];
+}
+
+export async function listDepartmentRosterAssignments(options = {}) {
+  if (hasSupabaseEnv) {
+    let query = supabase
+      .from('department_roster_assignments')
+      .select('id, flight_id, department, assignment_role, assigned_crew_member_id, assigned_by_member_id, created_at, updated_at, assigned_member:crew_members!department_roster_assignments_assigned_crew_member_id_fkey(display_name)')
+      .order('assignment_role', { ascending: true });
+
+    if (options.department) {
+      query = query.eq('department', options.department);
+    }
+
+    if (options.flightId) {
+      query = query.eq('flight_id', options.flightId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapDepartmentRosterAssignment);
+  }
+
+  const { assignments } = await apiRequest('listDepartmentRosterAssignments', { options });
+  return assignments || [];
+}
+
+export async function saveDepartmentRosterAssignment({
+  flightId,
+  department,
+  assignmentRole,
+  assignedCrewMemberId,
+  assignedByMemberId,
+}) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('department_roster_assignments')
+      .upsert({
+        flight_id: flightId,
+        department,
+        assignment_role: assignmentRole,
+        assigned_crew_member_id: assignedCrewMemberId,
+        assigned_by_member_id: assignedByMemberId || null,
+      }, {
+        onConflict: 'flight_id,department,assignment_role',
+      })
+      .select('id, flight_id, department, assignment_role, assigned_crew_member_id, assigned_by_member_id, created_at, updated_at, assigned_member:crew_members!department_roster_assignments_assigned_crew_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+    const assignment = mapDepartmentRosterAssignment(data);
+    emit(DATA_CHANGED_EVENT);
+    return assignment;
+  }
+
+  const { assignment } = await apiRequest('saveDepartmentRosterAssignment', {
+    flightId,
+    department,
+    assignmentRole,
+    assignedCrewMemberId,
+    assignedByMemberId,
+  });
+  emit(DATA_CHANGED_EVENT);
+  return assignment;
 }
 
 export async function createSeniorManagementRequest(data, crewMember) {

@@ -89,6 +89,21 @@ create table if not exists public.flight_allocations (
 create index if not exists idx_flight_allocations_flight_id on public.flight_allocations(flight_id);
 create index if not exists idx_flight_allocations_member_id on public.flight_allocations(crew_member_id);
 
+create table if not exists public.department_roster_assignments (
+  id uuid primary key default gen_random_uuid(),
+  flight_id uuid not null references public.flights(id) on delete cascade,
+  department text not null,
+  assignment_role text not null,
+  assigned_crew_member_id uuid references public.crew_members(id) on delete set null,
+  assigned_by_member_id uuid references public.crew_members(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (flight_id, department, assignment_role)
+);
+
+create index if not exists idx_department_rosters_flight_id on public.department_roster_assignments(flight_id);
+create index if not exists idx_department_rosters_department on public.department_roster_assignments(department);
+
 create table if not exists public.loa_requests (
   id uuid primary key default gen_random_uuid(),
   crew_member_id uuid not null references public.crew_members(id) on delete cascade,
@@ -153,6 +168,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists loa_requests_set_updated_at on public.loa_requests;
 create trigger loa_requests_set_updated_at
 before update on public.loa_requests
+for each row execute function public.set_updated_at();
+
+drop trigger if exists department_roster_assignments_set_updated_at on public.department_roster_assignments;
+create trigger department_roster_assignments_set_updated_at
+before update on public.department_roster_assignments
 for each row execute function public.set_updated_at();
 
 drop trigger if exists senior_management_requests_set_updated_at on public.senior_management_requests;
@@ -220,6 +240,7 @@ alter table public.crew_members enable row level security;
 alter table public.notices enable row level security;
 alter table public.flights enable row level security;
 alter table public.flight_allocations enable row level security;
+alter table public.department_roster_assignments enable row level security;
 alter table public.loa_requests enable row level security;
 alter table public.senior_management_requests enable row level security;
 
@@ -247,6 +268,13 @@ using (true);
 drop policy if exists "flight_allocations_read_all" on public.flight_allocations;
 create policy "flight_allocations_read_all"
 on public.flight_allocations
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "department_rosters_read_all" on public.department_roster_assignments;
+create policy "department_rosters_read_all"
+on public.department_roster_assignments
 for select
 to anon, authenticated
 using (true);

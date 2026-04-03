@@ -13,6 +13,8 @@ import LOA from './pages/LOA';
 import Profile from './pages/Profile';
 import StaffDatabase from './pages/StaffDatabase';
 import SeniorManagement from './pages/SeniorManagement';
+import AirsideOperations from './pages/AirsideOperations';
+import SecurityRosters from './pages/SecurityRosters';
 import ManageNotices from './pages/admin/ManageNotices';
 import ManageCrew from './pages/admin/ManageCrew';
 import ManageLOA from './pages/admin/ManageLOA';
@@ -27,7 +29,7 @@ import {
   setStoredThemePreference,
   subscribeToSession,
 } from '@/lib/dataStore';
-import { hasRole } from '@/lib/roleUtils';
+import { hasAnyRole, hasRole } from '@/lib/roleUtils';
 
 const LOGOUT_DELAY_MS = 750;
 
@@ -150,6 +152,22 @@ const AuthenticatedApp = () => {
         <Route path="/staff-database" element={<StaffDatabase />} />
         <Route path="/senior-management" element={<SeniorManagement />} />
         <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/department-rosters/airside-operations"
+          element={
+            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Airside Operations', 'Flight Dispatcher')}>
+              <AirsideOperations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/department-rosters/security"
+          element={
+            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Security', 'Flight Dispatcher')}>
+              <SecurityRosters />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/notices"
           element={
