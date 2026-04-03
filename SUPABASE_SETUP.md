@@ -6,6 +6,7 @@ This repo now includes a ready-to-run Supabase schema for the crew portal.
 
 - `supabase/schema.sql`
 - `supabase/app_rpc.sql`
+- `supabase/client_policies.sql`
 - `.env.example`
 - `src/lib/supabaseClient.js`
 
@@ -34,7 +35,9 @@ It also seeds:
 4. Run it once.
 5. Paste in `supabase/app_rpc.sql`.
 6. Run it once.
-7. Copy your project URL and anon key into a local `.env.local` file based on `.env.example`.
+7. Paste in `supabase/client_policies.sql`.
+8. Run it once.
+9. Copy your project URL and anon key into a local `.env.local` file based on `.env.example`.
 
 ## Notes
 

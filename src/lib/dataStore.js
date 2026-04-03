@@ -4,6 +4,7 @@ const SESSION_KEY = 'crew_session';
 const LEGACY_DB_KEY = 'crew_portal_db_v1';
 const DATA_CHANGED_EVENT = 'crew-portal:data-changed';
 const SESSION_CHANGED_EVENT = 'crew-portal:session-changed';
+const LOA_REVIEW_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 export const CREW_STATUS_OPTIONS = [
   'Exempt',
@@ -33,6 +34,22 @@ function emit(name) {
   }
 }
 
+function sortRecords(records, sort) {
+  if (!sort) return records;
+  const descending = sort.startsWith('-');
+  const field = descending ? sort.slice(1) : sort;
+
+  return [...records].sort((a, b) => {
+    const aValue = a?.[field];
+    const bValue = b?.[field];
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return descending ? 1 : -1;
+    if (bValue == null) return descending ? -1 : 1;
+    if (aValue === bValue) return 0;
+    return (aValue > bValue ? 1 : -1) * (descending ? -1 : 1);
+  });
+}
+
 function mapCrewMember(member) {
   if (!member) return null;
   return {
@@ -50,10 +67,93 @@ function mapCrewMember(member) {
   };
 }
 
-async function supabaseRpc(name, args = {}) {
-  const { data, error } = await supabase.rpc(name, args);
-  if (error) throw error;
-  return data;
+function mapFlight(flight) {
+  if (!flight) return null;
+  return {
+    id: flight.id,
+    flight_number: flight.flight_number,
+    departure: flight.departure,
+    arrival: flight.arrival,
+    date: flight.departure_at || flight.date,
+    aircraft: flight.aircraft || '',
+    plane_model: flight.plane_model || '',
+    plane_registration: flight.plane_registration || '',
+    status: flight.status || 'Scheduled',
+    max_crew: Number(flight.max_crew || 0),
+    created_by_name: flight.created_by?.display_name || flight.created_by_name || '',
+    created_date: flight.created_at || flight.created_date || null,
+    updated_date: flight.updated_at || flight.updated_date || null,
+  };
+}
+
+function mapAllocation(allocation) {
+  if (!allocation) return null;
+  const roles = Array.isArray(allocation.crew_member?.roles)
+    ? allocation.crew_member.roles.join(', ')
+    : allocation.crew_member_roles || '';
+
+  return {
+    id: allocation.id,
+    flight_id: allocation.flight_id,
+    crew_member_id: allocation.crew_member_id,
+    crew_member_name: allocation.crew_member?.display_name || allocation.crew_member_name || '',
+    crew_member_roles: roles,
+    position: allocation.position,
+    created_date: allocation.created_at || allocation.created_date || null,
+  };
+}
+
+function mapNotice(notice) {
+  if (!notice) return null;
+  return {
+    id: notice.id,
+    title: notice.title,
+    content: notice.content,
+    priority: notice.priority || 'Medium',
+    pinned: Boolean(notice.pinned),
+    author_name: notice.author?.display_name || notice.author_name || '',
+    author_roles: Array.isArray(notice.author?.roles) ? notice.author.roles : notice.author_roles || [],
+    author_rank: notice.author?.rank || notice.author_rank || '',
+    created_date: notice.created_at || notice.created_date || null,
+    updated_date: notice.updated_at || notice.updated_date || null,
+  };
+}
+
+function mapLoaRequest(request) {
+  if (!request) return null;
+  return {
+    id: request.id,
+    crew_member_id: request.crew_member_id,
+    crew_member_name: request.crew_member?.display_name || request.crew_member_name || '',
+    start_date: request.start_date,
+    end_date: request.end_date,
+    reason: request.reason,
+    status: request.status || 'Pending',
+    reviewed_by: request.reviewer?.display_name || request.reviewed_by || '',
+    reviewed_at: request.reviewed_at || '',
+    notification_dismissed: Boolean(request.notification_dismissed),
+    admin_seen: Boolean(request.admin_seen),
+    created_date: request.created_at || request.created_date || null,
+    updated_date: request.updated_at || request.updated_date || null,
+  };
+}
+
+function mapSeniorManagementRequest(request) {
+  if (!request) return null;
+  return {
+    id: request.id,
+    crew_member_id: request.crew_member_id,
+    crew_member_name: request.crew_member?.display_name || request.crew_member_name || '',
+    request_type: request.request_type,
+    requested_at: request.requested_at,
+    reason: request.reason,
+    status: request.status || 'Pending',
+    reviewed_by: request.reviewer?.display_name || request.reviewed_by || '',
+    reviewed_at: request.reviewed_at || '',
+    admin_seen: Boolean(request.admin_seen),
+    created_date: request.created_at || request.created_date || null,
+    updated_date: request.updated_at || request.updated_date || null,
+  };
 }
 
 async function requestJson(url, options) {
@@ -78,6 +178,12 @@ async function apiRequest(action, payload = {}) {
     throw new Error(data.error || 'Request failed.');
   }
 
+  return data;
+}
+
+async function supabaseRpc(name, args = {}) {
+  const { data, error } = await supabase.rpc(name, args);
+  if (error) throw error;
   return data;
 }
 
@@ -282,76 +388,348 @@ export async function deleteCrewMember(id) {
 }
 
 export async function listFlights(options = {}) {
+  if (hasSupabaseEnv) {
+    let query = supabase
+      .from('flights')
+      .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)');
+
+    if (options.status) {
+      query = query.eq('status', options.status);
+    }
+
+    if (options.sort === '-date') {
+      query = query.order('departure_at', { ascending: false });
+    } else {
+      query = query.order('departure_at', { ascending: true });
+    }
+
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapFlight);
+  }
+
   const { flights } = await apiRequest('listFlights', { options });
   return flights || [];
 }
 
 export async function getFlightById(id) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('flights')
+      .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return mapFlight(data);
+  }
+
   const { flight } = await apiRequest('getFlightById', { id });
   return flight || null;
 }
 
 export async function createFlight(data, crewMember) {
+  if (hasSupabaseEnv) {
+    const { data: created, error } = await supabase
+      .from('flights')
+      .insert({
+        flight_number: data.flight_number?.trim() || `FLT-${Date.now()}`,
+        departure: data.departure?.trim() || '',
+        arrival: data.arrival?.trim() || '',
+        departure_at: new Date(data.date).toISOString(),
+        aircraft: data.aircraft?.trim() || '',
+        plane_model: data.plane_model?.trim() || '',
+        plane_registration: data.plane_registration?.trim() || '',
+        status: data.status || 'Scheduled',
+        max_crew: FLIGHT_ROLE_SLOTS.reduce((sum, item) => sum + item.capacity, 0),
+        created_by_member_id: crewMember?.id || null,
+      })
+      .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+    const flight = mapFlight(created);
+    emit(DATA_CHANGED_EVENT);
+    return flight;
+  }
+
   const { flight } = await apiRequest('createFlight', { data, crewMember });
   emit(DATA_CHANGED_EVENT);
   return flight;
 }
 
 export async function deleteFlight(id) {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase.from('flights').delete().eq('id', id);
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('deleteFlight', { id });
   emit(DATA_CHANGED_EVENT);
 }
 
 export async function listFlightAllocations(options = {}) {
+  if (hasSupabaseEnv) {
+    let query = supabase
+      .from('flight_allocations')
+      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, roles)')
+      .order('position', { ascending: true });
+
+    if (options.flightId) {
+      query = query.eq('flight_id', options.flightId);
+    }
+
+    if (options.crewMemberId) {
+      query = query.eq('crew_member_id', options.crewMemberId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapAllocation);
+  }
+
   const { allocations } = await apiRequest('listFlightAllocations', { options });
   return allocations || [];
 }
 
 export async function allocateToFlight({ flightId, crewMember, position }) {
+  if (hasSupabaseEnv) {
+    const flight = await getFlightById(flightId);
+    if (!flight) throw new Error('Flight not found.');
+    if (flight.status !== 'Scheduled') throw new Error('You can only allocate to scheduled flights.');
+
+    const slot = FLIGHT_ROLE_SLOTS.find(item => item.role === position);
+    if (!slot) throw new Error('That position is not available on this flight.');
+
+    const allocations = await listFlightAllocations({ flightId });
+    if (allocations.some(item => item.crew_member_id === crewMember.id)) {
+      throw new Error('You are already allocated to this flight.');
+    }
+
+    const filled = allocations.filter(item => item.position === position).length;
+    if (filled >= slot.capacity) {
+      throw new Error('That role is already full on this flight.');
+    }
+
+    const { data, error } = await supabase
+      .from('flight_allocations')
+      .insert({
+        flight_id: flightId,
+        crew_member_id: crewMember.id,
+        position,
+      })
+      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, roles)')
+      .single();
+
+    if (error) throw error;
+    const allocation = mapAllocation(data);
+    emit(DATA_CHANGED_EVENT);
+    return allocation;
+  }
+
   const { allocation } = await apiRequest('allocateToFlight', { flightId, crewMember, position });
   emit(DATA_CHANGED_EVENT);
   return allocation;
 }
 
 export async function removeFlightAllocation(id) {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase.from('flight_allocations').delete().eq('id', id);
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('removeFlightAllocation', { id });
   emit(DATA_CHANGED_EVENT);
 }
 
 export async function listNotices(options = {}) {
+  if (hasSupabaseEnv) {
+    let query = supabase
+      .from('notices')
+      .select('id, title, content, priority, pinned, created_at, updated_at, author:crew_members!notices_author_member_id_fkey(display_name, roles, rank)')
+      .order('created_at', { ascending: false });
+
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    let notices = (data || []).map(mapNotice);
+    if (options.boardOnly) {
+      notices = notices.filter(notice => {
+        const roles = Array.isArray(notice.author_roles) ? notice.author_roles : [];
+        return roles.includes('Executive Board') || roles.includes('Senior Board');
+      });
+    }
+
+    notices.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
+    return notices;
+  }
+
   const { notices } = await apiRequest('listNotices', { options });
   return notices || [];
 }
 
 export async function createNotice(data, author) {
+  if (hasSupabaseEnv) {
+    const { data: created, error } = await supabase
+      .from('notices')
+      .insert({
+        title: data.title.trim(),
+        content: data.content.trim(),
+        priority: data.priority || 'Medium',
+        pinned: Boolean(data.pinned),
+        author_member_id: author?.id || null,
+      })
+      .select('id, title, content, priority, pinned, created_at, updated_at, author:crew_members!notices_author_member_id_fkey(display_name, roles, rank)')
+      .single();
+
+    if (error) throw error;
+    const notice = mapNotice(created);
+    emit(DATA_CHANGED_EVENT);
+    return notice;
+  }
+
   const { notice } = await apiRequest('createNotice', { data, author });
   emit(DATA_CHANGED_EVENT);
   return notice;
 }
 
 export async function updateNotice(id, updates) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('notices')
+      .update({
+        title: updates.title?.trim(),
+        content: updates.content?.trim(),
+        priority: updates.priority,
+        pinned: Boolean(updates.pinned),
+      })
+      .eq('id', id)
+      .select('id, title, content, priority, pinned, created_at, updated_at, author:crew_members!notices_author_member_id_fkey(display_name, roles, rank)')
+      .single();
+
+    if (error) throw error;
+    const notice = mapNotice(data);
+    emit(DATA_CHANGED_EVENT);
+    return notice;
+  }
+
   const { notice } = await apiRequest('updateNotice', { id, updates });
   emit(DATA_CHANGED_EVENT);
   return notice;
 }
 
 export async function deleteNotice(id) {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase.from('notices').delete().eq('id', id);
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('deleteNotice', { id });
   emit(DATA_CHANGED_EVENT);
 }
 
+async function purgeExpiredReviewedLoaRequests() {
+  if (!hasSupabaseEnv) return;
+
+  const cutoffIso = new Date(Date.now() - LOA_REVIEW_RETENTION_MS).toISOString();
+  await supabase
+    .from('loa_requests')
+    .delete()
+    .neq('status', 'Pending')
+    .lt('reviewed_at', cutoffIso);
+}
+
 export async function listLoaRequests(options = {}) {
+  if (hasSupabaseEnv) {
+    await purgeExpiredReviewedLoaRequests();
+
+    let query = supabase
+      .from('loa_requests')
+      .select('id, crew_member_id, start_date, end_date, reason, status, reviewed_at, notification_dismissed, admin_seen, created_at, updated_at, crew_member:crew_members!loa_requests_crew_member_id_fkey(display_name), reviewer:crew_members!loa_requests_reviewed_by_member_id_fkey(display_name)')
+      .order('created_at', { ascending: false });
+
+    if (options.crewMemberId) {
+      query = query.eq('crew_member_id', options.crewMemberId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapLoaRequest);
+  }
+
   const { requests } = await apiRequest('listLoaRequests', { options });
   return requests || [];
 }
 
 export async function createLoaRequest(data, crewMember) {
+  if (hasSupabaseEnv) {
+    const { data: created, error } = await supabase
+      .from('loa_requests')
+      .insert({
+        crew_member_id: crewMember.id,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        reason: data.reason.trim(),
+        status: 'Pending',
+        notification_dismissed: true,
+        admin_seen: false,
+      })
+      .select('id, crew_member_id, start_date, end_date, reason, status, reviewed_at, notification_dismissed, admin_seen, created_at, updated_at, crew_member:crew_members!loa_requests_crew_member_id_fkey(display_name), reviewer:crew_members!loa_requests_reviewed_by_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+    const request = mapLoaRequest(created);
+    emit(DATA_CHANGED_EVENT);
+    return request;
+  }
+
   const { request } = await apiRequest('createLoaRequest', { data, crewMember });
   emit(DATA_CHANGED_EVENT);
   return request;
 }
 
 export async function reviewLoaRequest(id, status, reviewer) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('loa_requests')
+      .update({
+        status,
+        reviewed_by_member_id: reviewer?.id || null,
+        reviewed_at: new Date().toISOString(),
+        notification_dismissed: false,
+        admin_seen: true,
+      })
+      .eq('id', id)
+      .select('id, crew_member_id, start_date, end_date, reason, status, reviewed_at, notification_dismissed, admin_seen, created_at, updated_at, crew_member:crew_members!loa_requests_crew_member_id_fkey(display_name), reviewer:crew_members!loa_requests_reviewed_by_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+
+    await supabase
+      .from('crew_members')
+      .update({ status: status === 'Approved' ? 'Authorise Leave' : 'Active' })
+      .eq('id', data.crew_member_id);
+
+    await refreshSession();
+    const request = mapLoaRequest(data);
+    emit(DATA_CHANGED_EVENT);
+    return request;
+  }
+
   const { request } = await apiRequest('reviewLoaRequest', { id, status, reviewer });
   await refreshSession();
   emit(DATA_CHANGED_EVENT);
@@ -359,6 +737,18 @@ export async function reviewLoaRequest(id, status, reviewer) {
 }
 
 export async function dismissLoaNotification(requestId, crewMemberId) {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase
+      .from('loa_requests')
+      .update({ notification_dismissed: true })
+      .eq('id', requestId)
+      .eq('crew_member_id', crewMemberId);
+
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('dismissLoaNotification', { requestId, crewMemberId });
   emit(DATA_CHANGED_EVENT);
 }
@@ -369,38 +759,138 @@ export async function getActiveLoaNotification(crewMemberId) {
 }
 
 export async function markPendingLoaRequestsSeen() {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase
+      .from('loa_requests')
+      .update({ admin_seen: true })
+      .eq('status', 'Pending')
+      .eq('admin_seen', false);
+
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('markPendingLoaRequestsSeen');
   emit(DATA_CHANGED_EVENT);
 }
 
 export async function hasUnseenPendingLoaRequests() {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('loa_requests')
+      .select('id')
+      .eq('status', 'Pending')
+      .eq('admin_seen', false);
+
+    if (error) throw error;
+    return Boolean(data?.length);
+  }
+
   const { hasUnseen } = await apiRequest('hasUnseenPendingLoaRequests');
   return Boolean(hasUnseen);
 }
 
 export async function listSeniorManagementRequests(options = {}) {
+  if (hasSupabaseEnv) {
+    let query = supabase
+      .from('senior_management_requests')
+      .select('id, crew_member_id, request_type, requested_at, reason, status, reviewed_at, admin_seen, created_at, updated_at, crew_member:crew_members!senior_management_requests_crew_member_id_fkey(display_name), reviewer:crew_members!senior_management_requests_reviewed_by_member_id_fkey(display_name)')
+      .order('created_at', { ascending: false });
+
+    if (options.crewMemberId) {
+      query = query.eq('crew_member_id', options.crewMemberId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapSeniorManagementRequest);
+  }
+
   const { requests } = await apiRequest('listSeniorManagementRequests', { options });
   return requests || [];
 }
 
 export async function createSeniorManagementRequest(data, crewMember) {
+  if (hasSupabaseEnv) {
+    const { data: created, error } = await supabase
+      .from('senior_management_requests')
+      .insert({
+        crew_member_id: crewMember.id,
+        request_type: data.request_type,
+        requested_at: new Date(data.requested_at).toISOString(),
+        reason: data.reason.trim(),
+        status: 'Pending',
+        admin_seen: false,
+      })
+      .select('id, crew_member_id, request_type, requested_at, reason, status, reviewed_at, admin_seen, created_at, updated_at, crew_member:crew_members!senior_management_requests_crew_member_id_fkey(display_name), reviewer:crew_members!senior_management_requests_reviewed_by_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+    const request = mapSeniorManagementRequest(created);
+    emit(DATA_CHANGED_EVENT);
+    return request;
+  }
+
   const { request } = await apiRequest('createSeniorManagementRequest', { data, crewMember });
   emit(DATA_CHANGED_EVENT);
   return request;
 }
 
 export async function reviewSeniorManagementRequest(id, status, reviewer) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('senior_management_requests')
+      .update({
+        status,
+        reviewed_by_member_id: reviewer?.id || null,
+        reviewed_at: new Date().toISOString(),
+        admin_seen: true,
+      })
+      .eq('id', id)
+      .select('id, crew_member_id, request_type, requested_at, reason, status, reviewed_at, admin_seen, created_at, updated_at, crew_member:crew_members!senior_management_requests_crew_member_id_fkey(display_name), reviewer:crew_members!senior_management_requests_reviewed_by_member_id_fkey(display_name)')
+      .single();
+
+    if (error) throw error;
+    const request = mapSeniorManagementRequest(data);
+    emit(DATA_CHANGED_EVENT);
+    return request;
+  }
+
   const { request } = await apiRequest('reviewSeniorManagementRequest', { id, status, reviewer });
   emit(DATA_CHANGED_EVENT);
   return request;
 }
 
 export async function markSeniorManagementRequestsSeen() {
+  if (hasSupabaseEnv) {
+    const { error } = await supabase
+      .from('senior_management_requests')
+      .update({ admin_seen: true })
+      .eq('status', 'Pending')
+      .eq('admin_seen', false);
+
+    if (error) throw error;
+    emit(DATA_CHANGED_EVENT);
+    return;
+  }
+
   await apiRequest('markSeniorManagementRequestsSeen');
   emit(DATA_CHANGED_EVENT);
 }
 
 export async function hasUnseenSeniorManagementRequests() {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('senior_management_requests')
+      .select('id')
+      .eq('status', 'Pending')
+      .eq('admin_seen', false);
+
+    if (error) throw error;
+    return Boolean(data?.length);
+  }
+
   const { hasUnseen } = await apiRequest('hasUnseenSeniorManagementRequests');
   return Boolean(hasUnseen);
 }
