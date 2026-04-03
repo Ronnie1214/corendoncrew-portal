@@ -14,6 +14,8 @@ import {
   MessagesSquare,
   BriefcaseBusiness,
   Menu,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from 'react';
@@ -23,11 +25,12 @@ import {
   hasUnseenSeniorManagementRequests,
   isBoardAdmin,
   subscribeToStore,
+  updatePreferredTheme,
 } from '@/lib/dataStore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getRolesArray, hasRole } from '@/lib/roleUtils';
 
-export default function Sidebar({ crewMember, onLogout }) {
+export default function Sidebar({ crewMember, onLogout, themePreference, onThemeChange }) {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
@@ -61,6 +64,19 @@ export default function Sidebar({ crewMember, onLogout }) {
     ...(isAdmin ? [{ path: '/admin/loa', label: 'LOA Requests', icon: CalendarOff, hasNotification: hasNewLoaRequest }] : []),
     ...(isAdmin ? [{ path: '/admin/senior-management', label: 'Requests', icon: BriefcaseBusiness, hasNotification: hasNewSeniorRequest }] : []),
   ];
+
+  const nextTheme = themePreference === 'dark' ? 'light' : 'dark';
+
+  const handleThemeToggle = async () => {
+    if (!crewMember?.id) return;
+    const selectedTheme = nextTheme;
+    onThemeChange?.(selectedTheme);
+    try {
+      await updatePreferredTheme(crewMember.id, selectedTheme);
+    } catch {
+      onThemeChange?.(themePreference);
+    }
+  };
 
   const renderNavLink = (item, mobile = false) => (
     <Link
@@ -134,6 +150,13 @@ export default function Sidebar({ crewMember, onLogout }) {
                   </nav>
 
                   <div className="border-t border-sidebar-border p-3">
+                    <button
+                      onClick={handleThemeToggle}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/70 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    >
+                      {themePreference === 'dark' ? <Sun className="h-4 w-4 flex-shrink-0" /> : <Moon className="h-4 w-4 flex-shrink-0" />}
+                      <span>{themePreference === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
+                    </button>
                     <button
                       onClick={() => {
                         setMobileOpen(false);
@@ -226,6 +249,16 @@ export default function Sidebar({ crewMember, onLogout }) {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border">
+        <button
+          onClick={handleThemeToggle}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all w-full mt-1",
+            collapsed && "justify-center"
+          )}
+        >
+          {themePreference === 'dark' ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+          {!collapsed && <span>{themePreference === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
         <div className={cn("flex items-center gap-3 px-2 py-2", collapsed && "justify-center")}>
           <div className="w-8 h-8 bg-sidebar-accent rounded-lg flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-bold text-sidebar-foreground">{crewMember?.display_name?.[0]}</span>

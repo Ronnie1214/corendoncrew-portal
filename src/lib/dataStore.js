@@ -60,6 +60,7 @@ function mapCrewMember(member) {
     rank: member.rank || '',
     status: member.status || 'Active',
     avatar_url: member.avatar_url || '',
+    preferred_theme: member.preferred_theme || 'system',
     join_date: member.join_date,
     flights_completed: Number(member.flights_completed || 0),
     created_date: member.created_at || member.created_date || null,
@@ -923,4 +924,8 @@ export async function getDashboardData(crewMember) {
     roles: Array.isArray(crewMember?.roles) ? crewMember.roles : [],
     notices,
   };
+}
+
+export async function updatePreferredTheme(crewMemberId, preferredTheme) {
+  return updateCrewMember(crewMemberId, { preferred_theme: preferredTheme });
 }

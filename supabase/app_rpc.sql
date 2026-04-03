@@ -7,6 +7,7 @@ returns table (
   rank text,
   status public.crew_status,
   avatar_url text,
+  preferred_theme text,
   join_date date,
   flights_completed integer,
   created_at timestamptz,
@@ -24,6 +25,7 @@ as $$
     crew.rank,
     crew.status,
     crew.avatar_url,
+    crew.preferred_theme,
     crew.join_date,
     crew.flights_completed,
     crew.created_at,
@@ -42,6 +44,7 @@ returns table (
   rank text,
   status public.crew_status,
   avatar_url text,
+  preferred_theme text,
   join_date date,
   flights_completed integer,
   created_at timestamptz,
@@ -70,6 +73,7 @@ begin
     rank,
     status,
     avatar_url,
+    preferred_theme,
     join_date,
     flights_completed
   )
@@ -81,6 +85,7 @@ begin
     coalesce(input_data->>'rank', ''),
     coalesce((input_data->>'status')::public.crew_status, 'Active'),
     coalesce(input_data->>'avatar_url', ''),
+    coalesce(input_data->>'preferred_theme', 'dark'),
     coalesce((input_data->>'join_date')::date, current_date),
     coalesce((input_data->>'flights_completed')::integer, 0)
   )
@@ -95,6 +100,7 @@ begin
     new_member.rank,
     new_member.status,
     new_member.avatar_url,
+    new_member.preferred_theme,
     new_member.join_date,
     new_member.flights_completed,
     new_member.created_at,
@@ -111,6 +117,7 @@ returns table (
   rank text,
   status public.crew_status,
   avatar_url text,
+  preferred_theme text,
   join_date date,
   flights_completed integer,
   created_at timestamptz,
@@ -150,6 +157,7 @@ begin
     rank = case when input_data ? 'rank' then coalesce(input_data->>'rank', '') else rank end,
     status = case when input_data ? 'status' then (input_data->>'status')::public.crew_status else status end,
     avatar_url = case when input_data ? 'avatar_url' then coalesce(input_data->>'avatar_url', '') else avatar_url end,
+    preferred_theme = case when input_data ? 'preferred_theme' then coalesce(input_data->>'preferred_theme', 'dark') else preferred_theme end,
     join_date = case when input_data ? 'join_date' and input_data->>'join_date' <> '' then (input_data->>'join_date')::date else join_date end,
     flights_completed = case when input_data ? 'flights_completed' then coalesce((input_data->>'flights_completed')::integer, flights_completed) else flights_completed end
   where id = member_id
@@ -168,6 +176,7 @@ begin
     updated_member.rank,
     updated_member.status,
     updated_member.avatar_url,
+    updated_member.preferred_theme,
     updated_member.join_date,
     updated_member.flights_completed,
     updated_member.created_at,

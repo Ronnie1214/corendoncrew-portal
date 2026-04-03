@@ -30,12 +30,18 @@ export default function CrewLogin({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(220,25%,12%)] via-[hsl(215,40%,20%)] to-[hsl(220,25%,8%)] relative overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[hsl(220,25%,10%)]">
+      <div
+        className="absolute inset-0 scale-110 bg-cover bg-center bg-no-repeat blur-xl"
+        style={{ backgroundImage: "url('/login-background.png')" }}
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,13,24,0.86),rgba(17,25,39,0.74),rgba(96,11,17,0.48))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(255,110,92,0.2),transparent_32%)]" />
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
       
-      <div className="w-full max-w-md mx-4 relative z-10">
-        <div className="text-center mb-8">
+      <div className="relative z-10 mx-4 w-full max-w-md">
+        <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-accent rounded-2xl mb-4 shadow-lg shadow-accent/25">
             <Plane className="w-8 h-8 text-white" />
           </div>

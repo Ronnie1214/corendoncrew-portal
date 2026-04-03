@@ -42,6 +42,7 @@ create table if not exists public.crew_members (
   rank text not null default '',
   status public.crew_status not null default 'Active',
   avatar_url text not null default '',
+  preferred_theme text not null default 'dark',
   join_date date not null default current_date,
   flights_completed integer not null default 0,
   created_at timestamptz not null default timezone('utc', now()),
@@ -168,6 +169,7 @@ returns table (
   rank text,
   status public.crew_status,
   avatar_url text,
+  preferred_theme text,
   join_date date,
   flights_completed integer
 )
@@ -183,6 +185,7 @@ as $$
     crew.rank,
     crew.status,
     crew.avatar_url,
+    crew.preferred_theme,
     crew.join_date,
     crew.flights_completed
   from public.crew_members as crew
@@ -270,6 +273,7 @@ insert into public.crew_members (
   rank,
   status,
   avatar_url,
+  preferred_theme,
   join_date,
   flights_completed
 )
@@ -290,6 +294,7 @@ values (
   'Chief Executive Officer',
   'Active',
   '',
+  'dark',
   current_date,
   0
 )
@@ -300,6 +305,7 @@ set
   rank = excluded.rank,
   status = excluded.status,
   avatar_url = excluded.avatar_url,
+  preferred_theme = excluded.preferred_theme,
   flights_completed = excluded.flights_completed,
   updated_at = timezone('utc', now());
 

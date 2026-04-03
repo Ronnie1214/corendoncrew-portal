@@ -29,6 +29,19 @@ import { hasRole } from '@/lib/roleUtils';
 
 const LOGOUT_DELAY_MS = 750;
 
+function applyTheme(themePreference) {
+  if (typeof document === 'undefined') return;
+
+  const resolvedTheme = themePreference === 'light'
+    ? 'light'
+    : themePreference === 'dark'
+      ? 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+  document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+  document.documentElement.dataset.theme = resolvedTheme;
+}
+
 function ProtectedRoute({ crewMember, canAccess, children }) {
   if (!canAccess(crewMember)) {
     return <Navigate to="/" replace />;
@@ -40,11 +53,14 @@ function ProtectedRoute({ crewMember, canAccess, children }) {
 const AuthenticatedApp = () => {
   const [crewMember, setCrewMember] = useState(() => getSessionCrewMember());
   const [checkingSession, setCheckingSession] = useState(true);
+  const [themePreference, setThemePreference] = useState(() => getSessionCrewMember()?.preferred_theme || 'dark');
 
   useEffect(() => {
     const loadSession = async () => {
       await migrateLegacyLocalData();
-      setCrewMember(await refreshSession() || getSessionCrewMember());
+      const nextMember = await refreshSession() || getSessionCrewMember();
+      setCrewMember(nextMember);
+      setThemePreference(nextMember?.preferred_theme || 'dark');
       setCheckingSession(false);
     };
 
@@ -54,6 +70,10 @@ const AuthenticatedApp = () => {
       loadSession();
     });
   }, []);
+
+  useEffect(() => {
+    applyTheme(themePreference);
+  }, [themePreference]);
 
   if (checkingSession) {
     return (
@@ -75,7 +95,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route element={<AppLayout crewMember={crewMember} onLogout={handleLogout} />}>
+      <Route element={<AppLayout crewMember={crewMember} onLogout={handleLogout} themePreference={themePreference} onThemeChange={setThemePreference} />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/flights" element={<Flights />} />
         <Route path="/flights/:id" element={<FlightDetail />} />
