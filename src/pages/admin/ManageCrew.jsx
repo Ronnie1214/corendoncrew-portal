@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ALL_ROLES, ROLE_COLORS, getRolesArray } from '@/lib/roleUtils';
+import { ALL_ROLES, RANK_ORDER, ROLE_COLORS, getRolesArray, sortByRank } from '@/lib/roleUtils';
 import {
   CREW_STATUS_OPTIONS,
   createCrewMember,
@@ -15,33 +15,7 @@ import {
   updateCrewMember,
 } from '@/lib/dataStore';
 
-const RANK_OPTIONS = [
-  'Chairman',
-  'Chief Executive Officer',
-  'Chief Operations Officer',
-  'Chief Staffing Officer',
-  'Chief Technology Officer',
-  'Chief Compliance Officer',
-  'Chief Financial Officer',
-  'Recruitment Director',
-  'Director of Cabin Operations',
-  'Chief Pilot',
-  'Director of Airside Operations',
-  'Director of Safety & Security',
-  'Director of Passenger Services',
-  'Network Manager',
-  'Line Training Captain',
-  'Turnaround Coordinator',
-  'Cabin Service Manager',
-  'Security Manager',
-  'Senior Captain',
-  'Captain',
-  'Senior Cabin Crew',
-  'Senior First Officer',
-  'Cabin Crew',
-  'First Officer',
-  'Ramp Agent',
-];
+const RANK_OPTIONS = [...RANK_ORDER];
 
 const INITIAL_FORM = {
   username: '',
@@ -76,7 +50,7 @@ export default function ManageCrew() {
   const [form, setForm] = useState(INITIAL_FORM);
 
   useEffect(() => {
-    const sync = async () => setMembers(await listCrewMembers());
+    const sync = async () => setMembers(sortByRank(await listCrewMembers()));
     sync();
     return subscribeToStore(sync);
   }, []);
