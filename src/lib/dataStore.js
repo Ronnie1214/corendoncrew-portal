@@ -7,6 +7,7 @@ const SESSION_CHANGED_EVENT = 'crew-portal:session-changed';
 const LOA_REVIEW_RETENTION_MS = 24 * 60 * 60 * 1000;
 const THEME_STORAGE_PREFIX = 'crew-theme:';
 const SESSION_LOCK_KEY = 'crew-session-locked';
+let completedFlightsProcessPromise = null;
 
 export const CREW_STATUS_OPTIONS = [
   'Exempt',
@@ -262,6 +263,24 @@ async function supabaseRpc(name, args = {}) {
   return data;
 }
 
+async function processCompletedFlightsIfNeeded() {
+  if (!hasSupabaseEnv) return;
+  if (completedFlightsProcessPromise) {
+    await completedFlightsProcessPromise;
+    return;
+  }
+
+  completedFlightsProcessPromise = (async () => {
+    try {
+      await supabaseRpc('process_completed_flights');
+    } finally {
+      completedFlightsProcessPromise = null;
+    }
+  })();
+
+  await completedFlightsProcessPromise;
+}
+
 function saveSession(member, options = {}) {
   const { force = false } = options;
   if (typeof window === 'undefined') return;
@@ -512,6 +531,8 @@ export async function deleteCrewMember(id) {
 
 export async function listFlights(options = {}) {
   if (hasSupabaseEnv) {
+    await processCompletedFlightsIfNeeded();
+
     let query = supabase
       .from('flights')
       .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)');
@@ -612,6 +633,8 @@ export async function deleteFlight(id) {
 
 export async function listFlightAllocations(options = {}) {
   if (hasSupabaseEnv) {
+    await processCompletedFlightsIfNeeded();
+
     let query = supabase
       .from('flight_allocations')
       .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, username, roles)')
