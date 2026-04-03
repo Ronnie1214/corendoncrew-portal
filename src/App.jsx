@@ -80,7 +80,7 @@ const AuthenticatedApp = () => {
 
       const storedTheme = getStoredThemePreference(nextMember?.id || activeSession?.id);
       setCrewMember(nextMember);
-      setThemePreference(nextMember ? storedTheme || nextMember.preferred_theme || 'dark' : 'dark');
+      setThemePreference(nextMember ? nextMember.preferred_theme || storedTheme || 'dark' : 'dark');
       setCheckingSession(false);
     };
 
@@ -110,7 +110,7 @@ const AuthenticatedApp = () => {
           loggingOutRef.current = false;
           sessionLoadRef.current += 1;
           setCrewMember(member);
-          setThemePreference(getStoredThemePreference(member?.id) || member?.preferred_theme || 'dark');
+          setThemePreference(member?.preferred_theme || getStoredThemePreference(member?.id) || 'dark');
           setCheckingSession(false);
         }}
       />
