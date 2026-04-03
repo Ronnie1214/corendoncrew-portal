@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import CrewLogin from './pages/CrewLogin';
 import AppLayout from './components/AppLayout';
@@ -55,6 +55,8 @@ function ProtectedRoute({ crewMember, canAccess, children }) {
 const AuthenticatedApp = () => {
   const [crewMember, setCrewMember] = useState(() => getSessionCrewMember());
   const [checkingSession, setCheckingSession] = useState(true);
+  const sessionLoadRef = useRef(0);
+  const loggingOutRef = useRef(false);
   const [themePreference, setThemePreference] = useState(() => {
     const session = getSessionCrewMember();
     return session?.preferred_theme || getStoredThemePreference(session?.id) || 'dark';
@@ -62,10 +64,23 @@ const AuthenticatedApp = () => {
 
   useEffect(() => {
     const loadSession = async () => {
+      const requestId = ++sessionLoadRef.current;
+      const activeSession = getSessionCrewMember();
+
+      if (!activeSession || loggingOutRef.current) {
+        setCrewMember(null);
+        setThemePreference('dark');
+        setCheckingSession(false);
+        return;
+      }
+
       await migrateLegacyLocalData();
-      const nextMember = await refreshSession() || getSessionCrewMember();
+      const nextMember = await refreshSession({ persist: false }) || getSessionCrewMember();
+      if (requestId !== sessionLoadRef.current || loggingOutRef.current) return;
+
+      const storedTheme = getStoredThemePreference(nextMember?.id || activeSession?.id);
       setCrewMember(nextMember);
-      setThemePreference(nextMember?.preferred_theme || getStoredThemePreference(nextMember?.id) || 'dark');
+      setThemePreference(nextMember ? storedTheme || nextMember.preferred_theme || 'dark' : 'dark');
       setCheckingSession(false);
     };
 
@@ -89,18 +104,38 @@ const AuthenticatedApp = () => {
   }
 
   if (!crewMember) {
-    return <CrewLogin onLogin={setCrewMember} />;
+    return (
+      <CrewLogin
+        onLogin={(member) => {
+          loggingOutRef.current = false;
+          sessionLoadRef.current += 1;
+          setCrewMember(member);
+          setThemePreference(getStoredThemePreference(member?.id) || member?.preferred_theme || 'dark');
+          setCheckingSession(false);
+        }}
+      />
+    );
   }
 
   const handleLogout = async () => {
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
+    sessionLoadRef.current += 1;
     await new Promise(resolve => setTimeout(resolve, LOGOUT_DELAY_MS));
     clearSession();
     setCrewMember(null);
+    setThemePreference('dark');
+    setCheckingSession(false);
   };
 
   const handleThemeChange = (nextTheme) => {
     setThemePreference(nextTheme);
     if (crewMember?.id) {
+      setCrewMember((current) => (
+        current?.id === crewMember.id
+          ? { ...current, preferred_theme: nextTheme }
+          : current
+      ));
       setStoredThemePreference(crewMember.id, nextTheme);
     }
   };

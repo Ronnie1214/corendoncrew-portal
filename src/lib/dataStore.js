@@ -6,6 +6,7 @@ const DATA_CHANGED_EVENT = 'crew-portal:data-changed';
 const SESSION_CHANGED_EVENT = 'crew-portal:session-changed';
 const LOA_REVIEW_RETENTION_MS = 24 * 60 * 60 * 1000;
 const THEME_STORAGE_PREFIX = 'crew-theme:';
+const SESSION_LOCK_KEY = 'crew-session-locked';
 
 export const CREW_STATUS_OPTIONS = [
   'Exempt',
@@ -35,6 +36,22 @@ function emit(name) {
   }
 }
 
+function isSessionLocked() {
+  return typeof window !== 'undefined' && localStorage.getItem(SESSION_LOCK_KEY) === '1';
+}
+
+function lockSession() {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SESSION_LOCK_KEY, '1');
+  }
+}
+
+function unlockSession() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(SESSION_LOCK_KEY);
+  }
+}
+
 function sortRecords(records, sort) {
   if (!sort) return records;
   const descending = sort.startsWith('-');
@@ -61,7 +78,7 @@ function mapCrewMember(member) {
     rank: member.rank || '',
     status: member.status || 'Active',
     avatar_url: member.avatar_url || '',
-    preferred_theme: member.preferred_theme || 'system',
+    preferred_theme: member.preferred_theme || 'dark',
     join_date: member.join_date,
     flights_completed: Number(member.flights_completed || 0),
     created_date: member.created_at || member.created_date || null,
@@ -189,7 +206,12 @@ async function supabaseRpc(name, args = {}) {
   return data;
 }
 
-function saveSession(member) {
+function saveSession(member, options = {}) {
+  const { force = false } = options;
+  if (typeof window === 'undefined') return;
+  if (isSessionLocked() && !force) return;
+
+  unlockSession();
   localStorage.setItem(SESSION_KEY, JSON.stringify(member));
   if (member?.id && member?.preferred_theme) {
     localStorage.setItem(`${THEME_STORAGE_PREFIX}${member.id}`, member.preferred_theme);
@@ -197,7 +219,20 @@ function saveSession(member) {
   emit(SESSION_CHANGED_EVENT);
 }
 
+export function setSessionCrewMember(member) {
+  if (!member) {
+    clearSession();
+    return;
+  }
+
+  saveSession(member, { force: true });
+}
+
 export function getSessionCrewMember() {
+  if (isSessionLocked()) {
+    return null;
+  }
+
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -207,6 +242,7 @@ export function getSessionCrewMember() {
 }
 
 export function clearSession() {
+  lockSession();
   localStorage.removeItem(SESSION_KEY);
   emit(SESSION_CHANGED_EVENT);
 }
@@ -239,7 +275,8 @@ export async function migrateLegacyLocalData() {
   }
 }
 
-export async function refreshSession() {
+export async function refreshSession(options = {}) {
+  const { persist = true } = options;
   const session = getSessionCrewMember();
   if (!session?.id) return null;
 
@@ -252,7 +289,9 @@ export async function refreshSession() {
         return null;
       }
 
-      saveSession(member);
+      if (persist) {
+        saveSession(member);
+      }
       return member;
     }
 
@@ -262,7 +301,9 @@ export async function refreshSession() {
       return null;
     }
 
-    saveSession(member);
+    if (persist) {
+      saveSession(member);
+    }
     return member;
   } catch {
     clearSession();
@@ -299,7 +340,7 @@ export async function authenticateCrewMember(username, password) {
       throw new Error('Your account is currently inactive.');
     }
 
-    saveSession(member);
+    saveSession(member, { force: true });
     return member;
   }
 
@@ -318,7 +359,7 @@ export async function authenticateCrewMember(username, password) {
     throw new Error(data.error || 'Unable to sign in.');
   }
 
-  saveSession(data.member);
+  saveSession(data.member, { force: true });
   return data.member;
 }
 
