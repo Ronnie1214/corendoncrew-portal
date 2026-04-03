@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   FLIGHT_ROLE_SLOTS,
   allocateToFlight,
+  canAllocateToFlightRole,
   createFlight,
   deleteFlight,
   getSessionCrewMember,
@@ -228,10 +229,15 @@ export default function Flights() {
                   <div className="border-t border-border">
                     {FLIGHT_ROLE_SLOTS.map(slot => {
                       const assigned = flightAllocations.filter(item => item.position === slot.role);
+                      const myAllocations = flightAllocations.filter(item => item.crew_member_id === crewMember?.id);
+                      const myRoleAllocation = myAllocations.find(item => item.position === slot.role);
                       const isFull = assigned.length >= slot.capacity;
-                      const isMine = myAllocation?.position === slot.role;
+                      const isRonnie = crewMember?.username === 'Ronnie';
+                      const isMine = Boolean(myRoleAllocation);
                       const isBusy = actionState[flight.id] === slot.role;
-                      const blockedByOtherRole = Boolean(myAllocation && !isMine);
+                      const blockedByOtherRole = !isRonnie && myAllocations.length > 0 && !isMine;
+                      const lacksPermission = !canAllocateToFlightRole(crewMember, slot.role);
+                      const disableAllocate = isFull || blockedByOtherRole || isBusy || lacksPermission;
 
                       return (
                         <div key={slot.role} className="border-b border-border px-4 py-4 last:border-b-0">
@@ -268,7 +274,7 @@ export default function Flights() {
                                     variant="outline"
                                     className="w-full border-red-500/25 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 sm:w-auto"
                                     disabled={actionState[flight.id] === 'remove'}
-                                    onClick={() => handleRemoveAllocation(myAllocation.id, flight.id)}
+                                    onClick={() => handleRemoveAllocation(myRoleAllocation.id, flight.id)}
                                   >
                                     Remove Allocation
                                   </Button>
@@ -277,13 +283,36 @@ export default function Flights() {
                                     size="sm"
                                     variant="outline"
                                     className="w-full border-primary/30 bg-transparent text-primary hover:bg-primary/10 hover:text-primary sm:w-auto"
-                                    disabled={isFull || blockedByOtherRole || isBusy}
+                                    disabled={disableAllocate}
                                     onClick={() => handleAllocate(flight.id, slot.role)}
                                   >
-                                    {blockedByOtherRole ? 'Already Allocated' : isFull ? 'Role Full' : isBusy ? 'Allocating...' : '+ Allocate'}
+                                    {lacksPermission
+                                      ? 'Role Locked'
+                                      : blockedByOtherRole
+                                        ? 'Already Allocated'
+                                        : isFull
+                                          ? 'Role Full'
+                                          : isBusy
+                                            ? 'Allocating...'
+                                            : '+ Allocate'}
                                   </Button>
                                 )}
                               </div>
+                              {lacksPermission && (
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                  {slot.role === 'Duty Manager'
+                                    ? 'Only Executive Board can allocate to Duty Manager.'
+                                    : `Only matching ${slot.role === 'Captain' || slot.role === 'First Officer'
+                                      ? 'Flight Deck'
+                                      : slot.role === 'Cabin Manager' || slot.role === 'Senior Cabin Crew' || slot.role === 'Cabin Crew'
+                                        ? 'Cabin Operations'
+                                        : slot.role === 'Security Manager' || slot.role === 'Security Officer'
+                                          ? 'Security'
+                                          : slot.role === 'Turnaround Coordinator' || slot.role === 'Ramp Agent'
+                                            ? 'Airside Operations'
+                                            : 'Flight Dispatcher'} crew can allocate to this role.`}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>

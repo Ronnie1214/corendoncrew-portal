@@ -36,6 +36,7 @@ export default function DepartmentRosterPage({
   autoLeadLabel,
   assignableFromPosition,
   assignmentRoles,
+  lockedMessage,
 }) {
   const [crewMember, setCrewMember] = useState(() => getSessionCrewMember());
   const [flights, setFlights] = useState([]);
@@ -117,6 +118,10 @@ export default function DepartmentRosterPage({
       <div>
         <h1 className="text-2xl font-heading font-bold">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        {lockedMessage}
       </div>
 
       {error && (

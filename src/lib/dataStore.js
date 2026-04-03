@@ -48,6 +48,20 @@ export const SECURITY_DEPARTMENT_ROLES = [
   'Police Car Patrol',
 ];
 
+const FLIGHT_ALLOCATION_ROLE_RULES = {
+  'Turnaround Coordinator': ['Airside Operations'],
+  'Ramp Agent': ['Airside Operations'],
+  'Security Manager': ['Security'],
+  'Security Officer': ['Security'],
+  'Cabin Manager': ['Cabin Operations'],
+  'Senior Cabin Crew': ['Cabin Operations'],
+  'Cabin Crew': ['Cabin Operations'],
+  'Captain': ['Flight Deck'],
+  'First Officer': ['Flight Deck'],
+  'Duty Manager': ['Executive Board'],
+  'Flight Dispatcher': ['Flight Dispatcher'],
+};
+
 function emit(name) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(name));
@@ -117,6 +131,7 @@ function mapFlight(flight) {
     plane_registration: flight.plane_registration || '',
     status: flight.status || 'Scheduled',
     max_crew: Number(flight.max_crew || 0),
+    created_by_member_id: flight.created_by_member_id || null,
     created_by_name: flight.created_by?.display_name || flight.created_by_name || '',
     created_date: flight.created_at || flight.created_date || null,
     updated_date: flight.updated_at || flight.updated_date || null,
@@ -135,9 +150,17 @@ function mapAllocation(allocation) {
     crew_member_id: allocation.crew_member_id,
     crew_member_name: allocation.crew_member?.display_name || allocation.crew_member_name || '',
     crew_member_roles: roles,
+    crew_member_username: allocation.crew_member?.username || allocation.crew_member_username || '',
     position: allocation.position,
     created_date: allocation.created_at || allocation.created_date || null,
   };
+}
+
+export function canAllocateToFlightRole(crewMember, position) {
+  if (!crewMember) return false;
+  if (crewMember.username === 'Ronnie') return true;
+  const requiredRoles = FLIGHT_ALLOCATION_ROLE_RULES[position] || [];
+  return requiredRoles.some((role) => Array.isArray(crewMember.roles) && crewMember.roles.includes(role));
 }
 
 function mapNotice(notice) {
@@ -548,11 +571,24 @@ export async function createFlight(data, crewMember) {
         max_crew: FLIGHT_ROLE_SLOTS.reduce((sum, item) => sum + item.capacity, 0),
         created_by_member_id: crewMember?.id || null,
       })
-      .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)')
+      .select('id, flight_number, departure, arrival, departure_at, aircraft, plane_model, plane_registration, status, max_crew, created_by_member_id, created_at, updated_at, created_by:crew_members!flights_created_by_member_id_fkey(display_name)')
       .single();
 
     if (error) throw error;
     const flight = mapFlight(created);
+
+    if (crewMember?.id) {
+      const { error: allocationError } = await supabase
+        .from('flight_allocations')
+        .insert({
+          flight_id: flight.id,
+          crew_member_id: crewMember.id,
+          position: 'Flight Dispatcher',
+        });
+
+      if (allocationError) throw allocationError;
+    }
+
     emit(DATA_CHANGED_EVENT);
     return flight;
   }
@@ -578,7 +614,7 @@ export async function listFlightAllocations(options = {}) {
   if (hasSupabaseEnv) {
     let query = supabase
       .from('flight_allocations')
-      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, roles)')
+      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, username, roles)')
       .order('position', { ascending: true });
 
     if (options.flightId) {
@@ -603,13 +639,20 @@ export async function allocateToFlight({ flightId, crewMember, position }) {
     const flight = await getFlightById(flightId);
     if (!flight) throw new Error('Flight not found.');
     if (flight.status !== 'Scheduled') throw new Error('You can only allocate to scheduled flights.');
+    if (!canAllocateToFlightRole(crewMember, position)) {
+      throw new Error('You do not have permission to allocate to that role.');
+    }
 
     const slot = FLIGHT_ROLE_SLOTS.find(item => item.role === position);
     if (!slot) throw new Error('That position is not available on this flight.');
 
     const allocations = await listFlightAllocations({ flightId });
-    if (allocations.some(item => item.crew_member_id === crewMember.id)) {
+    const isRonnie = crewMember?.username === 'Ronnie';
+    if (!isRonnie && allocations.some(item => item.crew_member_id === crewMember.id)) {
       throw new Error('You are already allocated to this flight.');
+    }
+    if (allocations.some(item => item.crew_member_id === crewMember.id && item.position === position)) {
+      throw new Error('You are already allocated to that role on this flight.');
     }
 
     const filled = allocations.filter(item => item.position === position).length;
@@ -624,7 +667,7 @@ export async function allocateToFlight({ flightId, crewMember, position }) {
         crew_member_id: crewMember.id,
         position,
       })
-      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, roles)')
+      .select('id, flight_id, crew_member_id, position, created_at, crew_member:crew_members!flight_allocations_crew_member_id_fkey(display_name, username, roles)')
       .single();
 
     if (error) throw error;

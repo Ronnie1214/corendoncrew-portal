@@ -39,8 +39,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
   const [hasNewSeniorRequest, setHasNewSeniorRequest] = useState(false);
   const isAdmin = isBoardAdmin(crewMember);
   const isExecutive = hasRole(crewMember, 'Executive Board');
-  const canViewAirsideRosters = hasAnyRole(crewMember, 'Airside Operations', 'Flight Dispatcher');
-  const canViewSecurityRosters = hasAnyRole(crewMember, 'Security', 'Flight Dispatcher');
+  const canViewAirsideRosters = hasAnyRole(crewMember, 'Executive Board', 'Senior Board', 'Airside Operations', 'Flight Dispatcher');
+  const canViewSecurityRosters = hasAnyRole(crewMember, 'Executive Board', 'Senior Board', 'Security', 'Flight Dispatcher');
 
   useEffect(() => {
     const sync = async () => {

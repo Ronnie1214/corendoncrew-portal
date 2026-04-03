@@ -1,0 +1,2 @@
+alter table public.flight_allocations
+drop constraint if exists flight_allocations_flight_id_crew_member_id_key;

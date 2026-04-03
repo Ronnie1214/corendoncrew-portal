@@ -7,11 +7,12 @@ export default function SecurityRosters() {
       title="Security"
       description="Security Managers can assign security jobs for flights once the one-hour window opens."
       department="security"
-      visibilityRoles={['Security', 'Flight Dispatcher']}
+      visibilityRoles={['Executive Board', 'Senior Board', 'Security', 'Flight Dispatcher']}
       leadPosition="Security Manager"
       autoLeadLabel="Security Manager"
       assignableFromPosition="Security Officer"
       assignmentRoles={SECURITY_DEPARTMENT_ROLES}
+      lockedMessage="This channel is locked to Senior Management and Security."
     />
   );
 }

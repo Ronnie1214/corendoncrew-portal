@@ -155,7 +155,7 @@ const AuthenticatedApp = () => {
         <Route
           path="/department-rosters/airside-operations"
           element={
-            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Airside Operations', 'Flight Dispatcher')}>
+            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Executive Board', 'Senior Board', 'Airside Operations', 'Flight Dispatcher')}>
               <AirsideOperations />
             </ProtectedRoute>
           }
@@ -163,7 +163,7 @@ const AuthenticatedApp = () => {
         <Route
           path="/department-rosters/security"
           element={
-            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Security', 'Flight Dispatcher')}>
+            <ProtectedRoute crewMember={crewMember} canAccess={(member) => hasAnyRole(member, 'Executive Board', 'Senior Board', 'Security', 'Flight Dispatcher')}>
               <SecurityRosters />
             </ProtectedRoute>
           }
