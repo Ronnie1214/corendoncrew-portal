@@ -982,5 +982,24 @@ export async function getDashboardData(crewMember) {
 }
 
 export async function updatePreferredTheme(crewMemberId, preferredTheme) {
+  if (hasSupabaseEnv) {
+    const { data, error } = await supabase
+      .from('crew_members')
+      .update({ preferred_theme: preferredTheme })
+      .eq('id', crewMemberId)
+      .select('id, username, display_name, roles, rank, status, avatar_url, preferred_theme, join_date, flights_completed, created_at, updated_at')
+      .single();
+
+    if (error) throw error;
+
+    const member = mapCrewMember(data);
+    const session = getSessionCrewMember();
+    if (session?.id === crewMemberId) {
+      saveSession(member, { force: true });
+    }
+    emit(DATA_CHANGED_EVENT);
+    return member;
+  }
+
   return updateCrewMember(crewMemberId, { preferred_theme: preferredTheme });
 }
