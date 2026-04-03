@@ -66,17 +66,17 @@ export default function Profile() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-heading font-bold">My Profile</h1>
 
-      <div className="rounded-2xl border border-border bg-[#131313] p-4 text-white shadow-sm sm:p-5">
-        <p className="text-sm font-semibold mb-4">Profile Picture</p>
+      <div className="rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-5">
+        <p className="mb-4 text-sm font-semibold">Profile Picture</p>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative w-fit">
-            <Avatar className="w-16 h-16 bg-zinc-800">
+            <Avatar className="h-16 w-16 bg-muted">
               <AvatarImage src={crewMember?.avatar_url || ''} alt={crewMember?.display_name} />
-              <AvatarFallback className="bg-zinc-800 text-white font-bold">
+              <AvatarFallback className="bg-muted font-bold text-foreground">
                 {crewMember?.display_name?.slice(0, 2).toUpperCase() || 'CP'}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center border-2 border-[#131313]">
+            <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary border-2 border-card">
               <Camera className="w-3 h-3 text-white" />
             </div>
           </div>
@@ -91,14 +91,14 @@ export default function Profile() {
               />
               <Button
                 variant="outline"
-                className="w-full border-zinc-600 bg-transparent text-white hover:bg-zinc-800 hover:text-white sm:w-auto"
+                className="w-full sm:w-auto"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Change Picture
               </Button>
-              <span className="text-xs text-zinc-400">JPG, PNG or GIF. Max 2MB.</span>
+              <span className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 2MB.</span>
             </div>
-            {pictureError && <p className="text-xs text-red-400 mt-3">{pictureError}</p>}
+            {pictureError && <p className="mt-3 text-xs text-red-500">{pictureError}</p>}
           </div>
         </div>
       </div>
