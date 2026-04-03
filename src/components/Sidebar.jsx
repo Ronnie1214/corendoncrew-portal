@@ -110,8 +110,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
                 <Plane className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="truncate font-heading text-sm font-bold text-sidebar-primary-foreground">Corendon Airlines</h1>
-                <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">Crew Portal</p>
+                <h1 className="truncate font-heading text-sm font-bold uppercase tracking-[0.24em] text-sidebar-primary-foreground">Crew Portal</h1>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/50">Corendon Airlines</p>
               </div>
             </div>
 
@@ -129,8 +129,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
                         <Plane className="h-5 w-5 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <h2 className="truncate font-heading text-base font-bold text-sidebar-primary-foreground">Crew Portal</h2>
-                        <p className="text-xs text-sidebar-foreground/50">{crewMember?.display_name}</p>
+                        <h2 className="truncate font-heading text-base font-bold uppercase tracking-[0.2em] text-sidebar-primary-foreground">Crew Portal</h2>
+                        <p className="text-xs uppercase tracking-[0.16em] text-sidebar-foreground/50">Corendon Airlines</p>
                       </div>
                     </div>
                   </div>
@@ -190,8 +190,8 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="font-heading font-bold text-sidebar-primary-foreground text-sm truncate">Corendon Airlines</h1>
-              <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider">Crew Portal</p>
+              <h1 className="truncate font-heading text-sm font-bold uppercase tracking-[0.24em] text-sidebar-primary-foreground">Crew Portal</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/50">Corendon Airlines</p>
             </div>
           )}
         </div>
