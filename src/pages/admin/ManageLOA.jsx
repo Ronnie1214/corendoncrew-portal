@@ -38,14 +38,14 @@ export default function ManageLOA() {
         <p className="text-muted-foreground text-sm mt-1">Approve or deny leave requests from crew members.</p>
       </div>
 
-      {requests.length === 0 ? (
+      {requests.filter((request) => request.status !== 'Approved').length === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <CalendarOff className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
           <p className="text-muted-foreground">No leave requests.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {requests.map(request => {
+          {requests.filter((request) => request.status !== 'Approved').map(request => {
             const config = statusConfig[request.status] || statusConfig.Pending;
             const Icon = config.icon;
 
@@ -87,6 +87,9 @@ export default function ManageLOA() {
                 )}
 
                 {request.reviewed_by && <p className="text-xs text-muted-foreground mt-2">Reviewed by: {request.reviewed_by}</p>}
+                {request.status === 'Denied' && (
+                  <p className="mt-2 text-xs text-muted-foreground">Will automatically delete in 24 hours.</p>
+                )}
               </div>
             );
           })}

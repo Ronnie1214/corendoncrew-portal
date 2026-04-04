@@ -812,11 +812,11 @@ async function purgeExpiredReviewedLoaRequests() {
   if (!hasSupabaseEnv) return;
 
   const cutoffIso = new Date(Date.now() - LOA_REVIEW_RETENTION_MS).toISOString();
+  const todayIso = new Date().toISOString().slice(0, 10);
   await supabase
     .from('loa_requests')
     .delete()
-    .neq('status', 'Pending')
-    .lt('reviewed_at', cutoffIso);
+    .or(`and(status.eq.Denied,reviewed_at.lt.${cutoffIso}),and(status.eq.Approved,end_date.lt.${todayIso})`);
 }
 
 export async function listLoaRequests(options = {}) {
@@ -830,6 +830,15 @@ export async function listLoaRequests(options = {}) {
 
     if (options.crewMemberId) {
       query = query.eq('crew_member_id', options.crewMemberId);
+    }
+
+    if (options.pendingOnly) {
+      query = query.eq('status', 'Pending');
+    }
+
+    if (options.activeApprovedOnly) {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      query = query.eq('status', 'Approved').gte('end_date', todayIso);
     }
 
     const { data, error } = await query;

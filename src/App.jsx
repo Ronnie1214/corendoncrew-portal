@@ -18,6 +18,7 @@ import SecurityRosters from './pages/SecurityRosters';
 import ManageNotices from './pages/admin/ManageNotices';
 import ManageCrew from './pages/admin/ManageCrew';
 import ManageLOA from './pages/admin/ManageLOA';
+import ActiveLoas from './pages/admin/ActiveLoas';
 import ManageSeniorManagement from './pages/admin/ManageSeniorManagement';
 import {
   clearSession,
@@ -189,6 +190,14 @@ const AuthenticatedApp = () => {
           element={
             <ProtectedRoute crewMember={crewMember} canAccess={isBoardAdmin}>
               <ManageLOA />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/active-loas"
+          element={
+            <ProtectedRoute crewMember={crewMember} canAccess={isBoardAdmin}>
+              <ActiveLoas />
             </ProtectedRoute>
           }
         />

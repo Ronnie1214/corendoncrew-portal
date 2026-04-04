@@ -64,6 +64,7 @@ export default function Sidebar({ crewMember, onLogout, themePreference, onTheme
     ...(isAdmin ? [{ path: '/admin/notices', label: 'Manage Notices', icon: Megaphone }] : []),
     ...(isExecutive ? [{ path: '/admin/crew', label: 'Manage Crew', icon: Shield }] : []),
     ...(isAdmin ? [{ path: '/admin/loa', label: 'LOA Requests', icon: CalendarOff, hasNotification: hasNewLoaRequest }] : []),
+    ...(isAdmin ? [{ path: '/admin/active-loas', label: 'Active LOAs', icon: CalendarOff }] : []),
     ...(isAdmin ? [{ path: '/admin/senior-management', label: 'Requests', icon: BriefcaseBusiness, hasNotification: hasNewSeniorRequest }] : []),
   ];
 
