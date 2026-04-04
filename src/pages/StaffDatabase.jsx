@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { differenceInCalendarDays, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { listCrewMembers, subscribeToStore } from '@/lib/dataStore';
 import { ROLE_COLORS, getRolesArray, sortByRank } from '@/lib/roleUtils';
@@ -16,6 +17,11 @@ function getStatusClasses(status) {
     default:
       return 'bg-yellow-500/10 text-yellow-600';
   }
+}
+
+function getDaysAsStaff(joinDate) {
+  if (!joinDate) return 0;
+  return Math.max(differenceInCalendarDays(new Date(), new Date(joinDate)), 0);
 }
 
 export default function StaffDatabase() {
@@ -43,6 +49,8 @@ export default function StaffDatabase() {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rank</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Flights Attended</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">DAS</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date of Employment</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Roles</th>
               </tr>
             </thead>
@@ -57,6 +65,8 @@ export default function StaffDatabase() {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-muted-foreground">{member.flights_completed || 0}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{getDaysAsStaff(member.join_date)}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{member.join_date ? format(new Date(member.join_date), 'dd/MM/yyyy') : 'N/A'}</td>
                   <td className="px-4 py-4">
                     <div className="flex flex-wrap gap-1.5">
                       {getRolesArray(member).map(role => (
@@ -90,6 +100,14 @@ export default function StaffDatabase() {
               <div>
                 <p className="text-xs text-muted-foreground">Flights Attended</p>
                 <p className="font-medium">{member.flights_completed || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">DAS</p>
+                <p className="font-medium">{getDaysAsStaff(member.join_date)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Date of Employment</p>
+                <p className="font-medium">{member.join_date ? format(new Date(member.join_date), 'dd/MM/yyyy') : 'N/A'}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Roles</p>
