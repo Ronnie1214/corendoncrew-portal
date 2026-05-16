@@ -413,6 +413,35 @@ export function subscribeToSession(callback) {
 export async function authenticateCrewMember(username, password) {
   if (hasSupabaseEnv) {
     try {
+      const data = await supabaseRpc('authenticate_crew_member', {
+        input_username: username,
+        input_password: password,
+      });
+      const member = mapCrewMember(Array.isArray(data) ? data[0] : data);
+
+      if (!member) {
+        throw new Error('No crew member found with that username or password.');
+      }
+
+      if (member.status === 'Inactive') {
+        throw new Error('Your account is currently inactive.');
+      }
+
+      saveSession(member, { force: true });
+      return member;
+    } catch (supabaseError) {
+      const message = supabaseError?.message || String(supabaseError || '');
+
+      if (
+        supabaseError instanceof TypeError ||
+        /failed to fetch/i.test(message) ||
+        /networkerror/i.test(message)
+      ) {
+        throw new Error('Unable to connect to the server. Please try again later.');
+      }
+    }
+
+    try {
       let { response, data } = await requestJson('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -433,37 +462,14 @@ export async function authenticateCrewMember(username, password) {
         return member;
       }
 
-      if (response.status && response.status !== 404 && response.status < 500) {
+      if (response.status && response.status !== 404) {
         throw new Error(data?.error || 'Unable to sign in.');
       }
     } catch (functionAuthError) {
-      if (!(functionAuthError instanceof TypeError)) {
+      const message = functionAuthError?.message || String(functionAuthError || '');
+      if (!(functionAuthError instanceof TypeError) && !/fetch failed/i.test(message)) {
         throw functionAuthError;
       }
-    }
-
-    try {
-      const data = await supabaseRpc('authenticate_crew_member', {
-        input_username: username,
-        input_password: password,
-      });
-      const member = mapCrewMember(Array.isArray(data) ? data[0] : data);
-
-      if (!member) {
-        throw new Error('No crew member found with that username or password.');
-      }
-
-      if (member.status === 'Inactive') {
-        throw new Error('Your account is currently inactive.');
-      }
-
-      saveSession(member, { force: true });
-      return member;
-    } catch (supabaseError) {
-      if (supabaseError instanceof TypeError) {
-        throw new Error('Unable to connect to the server. Please try again later.');
-      }
-      throw supabaseError;
     }
   }
 
